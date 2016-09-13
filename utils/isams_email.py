@@ -9,17 +9,11 @@ from settings import DEBUG
 class ISAMSEmail:
     msg = None
 
-    def __init__(self, message, bcc, to=EMAIL['to'], teachers=None):
-        print("DEBUG: ISAMSEmail({0}, {1}, {2}, {3})".format(message, bcc, to, teachers)) if DEBUG else False
+    def __init__(self, message, bcc, teachers=None):
         self.msg = MIMEText(message)
-        self.msg['To'] = to
+        self.msg['To'] = EMAIL['to']
         self.msg['From'] = EMAIL['from']
         self.msg['Cc'] = EMAIL['cc']
-
-        # if we're in debug, don't actually BCC the teachers
-        # if not DEBUG and (bcc or EMAIL['bcc']):
-        #     self.msg['Bcc'] = bcc + EMAIL['bcc']
-
         self.msg['Subject'] = EMAIL['subject']
 
     def send(self):

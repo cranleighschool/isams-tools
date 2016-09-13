@@ -16,8 +16,18 @@ def send_tutor_emails(teachers, stage):
     list_of_missing_registers = ""
     message = ""
 
+    # compile the BCC list as well as the text for %list_of_missing_registers%
+    i = 0
     for teacher in teachers:
-        bcc += teachers[teacher]['email'] + ", " if teachers[teacher]['email'] else ""
+        if teachers[teacher]['email']:
+            bcc += teachers[teacher]['email']
+
+        # don't put a comma for the last entry
+        if i < len(teachers) - 1:
+            bcc += ", "
+
+        i += 1
+
         list_of_missing_registers += '{0} {1}: {2} \n'.format(teachers[teacher]['forename'],
                                                               teachers[teacher]['surname'],
                                                               teachers[teacher]['form'])
@@ -33,14 +43,12 @@ def send_tutor_emails(teachers, stage):
     message = message.replace('%list_of_missing_registers%', list_of_missing_registers)
 
     if DEBUG:
-        to = 'kieran.hogg@gmail.com'
         message += "\n\nThis a debug email, the intented recipients were: " + bcc
         message += "\n\nStage " + str(stage)
+        print("DEBUG: ISAMSEmail({0}, {1}, {2})".format(message, bcc, teachers))
+        bcc = ""
 
-    if to:
-        email = ISAMSEmail(message, bcc, to, teachers)
-    else:
-        email = ISAMSEmail(message, bcc, to)
+    email = ISAMSEmail(message, bcc, teachers)
 
     if SEND_EMAILS:
         email.send()
