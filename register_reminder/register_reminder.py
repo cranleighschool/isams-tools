@@ -5,6 +5,10 @@ from settings import *
 from utils import connection
 from utils.isams_email import ISAMSEmail
 
+if __name__ == "__main__":
+    sys.stderr.write('Please use bin/isams_tools instead\n')
+    sys.exit(1)
+
 
 def send_tutor_emails(teachers, stage):
     to = ""

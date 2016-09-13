@@ -23,9 +23,8 @@ class ISAMSEmail:
         self.msg['Subject'] = EMAIL['subject']
 
     def send(self):
-        s = None
+        s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
         try:
-            s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
             s.login(EMAIL['username'], EMAIL['password'])
             s.sendmail(self.msg['From'], self.msg['To'], self.msg.as_string())
             s.quit()
