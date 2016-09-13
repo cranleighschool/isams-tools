@@ -1,6 +1,6 @@
 import datetime as dt
+import logging
 import sys
-
 from settings import *
 from utils import connection
 from utils.isams_email import ISAMSEmail
@@ -8,6 +8,8 @@ from utils.isams_email import ISAMSEmail
 if __name__ == "__main__":
     sys.stderr.write('Please use bin/isams_tools instead\n')
     sys.exit(1)
+
+logger = logging.getLogger('isams_tools')
 
 
 def send_tutor_emails(teachers, stage):
@@ -45,13 +47,15 @@ def send_tutor_emails(teachers, stage):
     if DEBUG:
         message += "\n\nThis a debug email, the intented recipients were: " + bcc
         message += "\n\nStage " + str(stage)
-        print("DEBUG: ISAMSEmail({0}, {1}, {2})".format(message, bcc, teachers))
+        logger.debug("BCC list before we bin it: " + bcc)
         bcc = ""
 
     email = ISAMSEmail(message, bcc, teachers)
 
     if SEND_EMAILS:
         email.send()
+    else:
+        logger.debug("Email not sent as we're in debug mode")
 
 
 class RegisterReminder:
@@ -72,7 +76,7 @@ class RegisterReminder:
         </Filters>
         """.format(self.start_date, self.end_date)
 
-        print("DEBUG:", filters) if DEBUG else False
+        logger.debug("Filters:", filters)
 
         # create the connection to ISAMS and receive the parsed XML
         self.tree = connection.ISAMSConnection(URL, filters).get_tree()
@@ -84,7 +88,6 @@ class RegisterReminder:
         send_tutor_emails(list_of_tutors, stage)
 
     def check_for_unregistered_students(self):
-        print("DEBUG check_for_unregistered_students()")
         all_students = []
         reg_students = []
 
@@ -105,8 +108,8 @@ class RegisterReminder:
 
             total_students = len(all_students)
             total_registered_students = len(reg_students)
-            print("DEBUG: Total students: {0}".format(total_students))
-            print("DEBUG: Registered students: {0}".format(total_registered_students))
+            logger.debug("Total students: {0}".format(total_students))
+            logger.debug("Registered students: {0}".format(total_registered_students))
 
         missing_students_ids = (list(set(all_students) - set(reg_students)))
         missing_students = []
@@ -125,6 +128,7 @@ class RegisterReminder:
                  'surname': student_surname,
                  'form': student_form}
             )
+
             # assuming FormId is unique, find the form and its teacher
             form = self.tree.findall('.//Form/[@Id="' + student_form + '"]')[0]
             tutor_id = form.get('TutorId')
@@ -134,7 +138,7 @@ class RegisterReminder:
             form_name = student_form
             email = tutor.find('SchoolEmailAddress').text
 
-            # TODO: currenly doesn't send a list of students
+            # TODO: currently doesn't send a list of students
             if tutor_id not in teachers:
                 teachers[tutor_id] = {
                     'forename': forename,
@@ -142,8 +146,7 @@ class RegisterReminder:
                     'email': email,
                     'form': form_name}
 
-            if DEBUG:
-                print("DEBUG:", student_forename, student_surname, student_form, forename, email)
+            logging.debug("{0} {1} {2} {3} {4}".format(student_forename, student_surname, student_form, forename, email))
 
         return teachers
 
