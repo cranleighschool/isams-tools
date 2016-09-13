@@ -2,6 +2,7 @@ iSAMS Tools README
 ==================
 
 **Register Reminder**
+Sends emails to tutors who have not registered all students.
 
 Requirements: iSAMS (with Batch API key setup, see below), Python 3, modules from requirements.txt, postfix/sendmail
 
