@@ -4,7 +4,7 @@ import logging
 import sys
 
 logger = logging.getLogger('root')
-hdlr = logging.FileHandler('../isams_tools.log')
+hdlr = logging.FileHandler('isams_tools.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
