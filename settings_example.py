@@ -4,6 +4,10 @@ ENABLED = True
 # if we're in testing mode, output more debug and allow testers to add their own email
 DEBUG = True
 
+# specify your own dates to use when testing, e.g. a date that has already had the register taken for
+DEBUG_START_DATE = '2016-09-01'
+DEBUG_END_DATE = '2016-09-02'
+
 # used with above, you can check the output of emails that would have been sent
 SEND_EMAILS = False
 

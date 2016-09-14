@@ -199,7 +199,7 @@ def run(stage=1):
     # do some basic checks to see if we should be running
     if ENABLED:
         if DEBUG:
-            RegisterReminder("2016-09-08", "2016-09-09", stage)
+            RegisterReminder(DEBUG_START_DATE, DEBUG_END_DATE, stage)
         else:
             today_dt = dt.datetime.today()
             tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
