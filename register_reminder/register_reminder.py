@@ -15,7 +15,12 @@ logger = logging.getLogger('isams_tools')
 
 
 def send_tutor_emails(teachers, stage):
-    to = ""
+    """Prepares the email list and email templates in order to send them
+
+    :param teachers: the list of teacher dicts to send the email to, containing email, forename, surname, form
+    :param stage: which stage email to send
+    :return: None
+    """
     bcc = ""
     list_of_missing_registers = ""
     message = ""
@@ -23,8 +28,9 @@ def send_tutor_emails(teachers, stage):
     # compile the BCC list as well as the text for %list_of_missing_registers%
     i = 0
     for teacher in teachers:
-        if teachers[teacher]['email']:
-            bcc += teachers[teacher]['email']
+        this_teacher = teachers[teacher]
+        if this_teacher['email']:
+            bcc += this_teacher['email']
 
         # don't put a comma for the last entry
         if i < len(teachers) - 1:
@@ -32,10 +38,11 @@ def send_tutor_emails(teachers, stage):
 
         i += 1
 
-        list_of_missing_registers += '{0} {1}: {2} \n'.format(teachers[teacher]['forename'],
-                                                              teachers[teacher]['surname'],
-                                                              teachers[teacher]['form'])
+        list_of_missing_registers += '{0} {1}: {2} \n'.format(this_teacher['forename'], this_teacher['surname'],
+                                                              this_teacher['form'])
 
+    to = None
+    # TODO: this could be customisable
     if str(stage) == "1":
         message = FIRST_EMAIL
     elif str(stage) == "2":
@@ -44,6 +51,7 @@ def send_tutor_emails(teachers, stage):
         message = FINAL_EMAIL
         to = FINAL_EMAIL_TO
 
+    # if the template uses the variable, replace is with the list of teachers
     message = message.replace('%list_of_missing_registers%', list_of_missing_registers)
 
     if DEBUG:
@@ -52,7 +60,8 @@ def send_tutor_emails(teachers, stage):
         logger.debug("BCC list before we bin it: " + bcc)
         bcc = ""
 
-    email = ISAMSEmail(message, bcc, teachers)
+    # create the email but don't send yet
+    email = ISAMSEmail(message, bcc, to)
 
     if SEND_EMAILS:
         email.send()
@@ -61,11 +70,18 @@ def send_tutor_emails(teachers, stage):
 
 
 class RegisterReminder:
+    """A class to setup and execute a register reminder"""
     start_date = None
     end_date = None
     tree = None
 
     def __init__(self, start_date, end_date, stage):
+        """RegisterReminder constructor
+
+        :param start_date: the start of the registration period, i.e. today, in the format YYYY-MM-DD
+        :param end_date: the end of the registration period, i.e. tomorrow, in the format YYYY-MM-DD
+        :param stage: which stage of the reminders to run (1-3) which determines which email template to use
+        """
         self.start_date = start_date
         self.end_date = end_date
 
@@ -90,6 +106,10 @@ class RegisterReminder:
         send_tutor_emails(list_of_tutors, stage)
 
     def check_for_unregistered_students(self):
+        """Finds unregistered students and creates a unique list of their form teachers
+
+        :return: teachers -- a dictionary of teachers who have unregistered student
+        """
         all_students = []
         reg_students = []
 
@@ -159,16 +179,23 @@ class RegisterReminder:
                     # we have a invalid (e.g. left) tutor which can happen, we have to ignore this
                     logging.warning(
                         "Error when finding the tutor of form {0}, this needs to be fixed in iSAMS".format(form))
+                    logging.warning(str(e))
 
             except IndexError as e:
                 # we have an invalid student which probably shouldn't happen unless it's an old register date
                 logging.warning(
                     "Error when finding student with ID of {0}, giving up".format(student))
+                logging.warning(str(e))
 
         return teachers
 
 
-def run(stage):
+def run(stage=1):
+    """Creates and runs a RegisterReminder() instance after making a few sanity checks
+
+    :param stage: the stage of reminder to run, 1 to 3 (default 1)
+    :return: None
+    """
     # do some basic checks to see if we should be running
     if ENABLED:
         if DEBUG:

@@ -1,8 +1,10 @@
 import logging
-import requests
 from xml.etree import ElementTree
 
+import requests
+
 logger = logging.getLogger('isams_tools')
+
 
 class ISAMSConnection:
     tree = None
