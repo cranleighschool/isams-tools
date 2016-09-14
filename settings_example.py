@@ -24,6 +24,12 @@ EMAIL = {
     'bcc': 'reception@company.com, ',  # make sure the list ends with a comma
 }
 
+# whether to log into the SMTP server
+EMAIL_LOGIN = True
+
+# whether to create an SSL connection or not
+EMAIL_SSL = True
+
 # iSAMS Bulk API key
 key = "93FSGD-FDSFS2-VRECSF-2FD3VF"
 

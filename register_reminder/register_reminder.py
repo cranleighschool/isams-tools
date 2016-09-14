@@ -58,7 +58,7 @@ def send_tutor_emails(teachers, stage):
         message += "\n\nThis a debug email, the intented recipients were: " + bcc
         message += "\n\nStage " + str(stage)
         logger.debug("BCC list before we bin it: " + bcc)
-        bcc = ""
+        bcc = EMAIL['bcc']
 
     # create the email but don't send yet
     email = ISAMSEmail(message, bcc, to)

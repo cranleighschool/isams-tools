@@ -3,7 +3,7 @@ import smtplib
 import sys
 from email.mime.text import MIMEText
 
-from settings import EMAIL
+from settings import EMAIL, EMAIL_LOGIN, EMAIL_SSL
 
 logger = logging.getLogger('root')
 
@@ -35,9 +35,14 @@ class ISAMSEmail:
         logger.debug("\n{0}".format(message))
 
     def send(self):
-        s = smtplib.SMTP(EMAIL['server'], EMAIL['port'])
+        if EMAIL_SSL:
+            s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
+        else:
+            s = smtplib.SMTP(EMAIL['server'], EMAIL['port'])
         try:
-            s.login(EMAIL['username'], EMAIL['password'])
+            if EMAIL_LOGIN:
+                s.login(EMAIL['username'], EMAIL['password'])
+
             s.sendmail(self.msg['From'], self.msg['To'], self.msg.as_string())
             s.quit()
             logger.debug("Email sent successfully")
