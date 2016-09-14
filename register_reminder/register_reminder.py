@@ -11,7 +11,7 @@ if __name__ == "__main__":
     sys.stderr.write('Please use bin/isams_tools instead\n')
     sys.exit(1)
 
-logger = logging.getLogger('isams_tools')
+logger = logging.getLogger('root')
 
 
 def send_tutor_emails(teachers, stage):

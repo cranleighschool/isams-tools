@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 
 from settings import EMAIL
 
-logger = logging.getLogger('isams_tools')
+logger = logging.getLogger('root')
 
 
 class ISAMSEmail:
@@ -29,7 +29,7 @@ class ISAMSEmail:
         self.msg['Subject'] = EMAIL['subject']
 
         logger.debug(
-            "Preparing email with the following headers:\nFrom:{0}\nTo:{1}\nCC:{2}\nBCC:{3}\nSubject{4}".format(
+            "Preparing email with the following headers:\nFrom: {0}\nTo: {1}\nCC: {2}\nBCC: {3}\nSubject: {4}: ".format(
                 EMAIL['to'], EMAIL['from'], EMAIL['cc'], bcc, EMAIL['subject']
             ))
         logger.debug("\n{0}".format(message))

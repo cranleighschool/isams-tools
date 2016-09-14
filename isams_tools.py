@@ -3,7 +3,7 @@ from settings import DEBUG
 import logging
 import sys
 
-logger = logging.getLogger('isams_tools')
+logger = logging.getLogger('root')
 hdlr = logging.FileHandler('../isams_tools.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)

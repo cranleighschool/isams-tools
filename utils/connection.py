@@ -3,7 +3,7 @@ from xml.etree import ElementTree
 
 import requests
 
-logger = logging.getLogger('isams_tools')
+logger = logging.getLogger('root')
 
 
 class ISAMSConnection:
