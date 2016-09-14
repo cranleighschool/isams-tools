@@ -1,14 +1,18 @@
 from register_reminder import register_reminder as rr
 from settings import DEBUG
 import logging
+import os
 import sys
 
+# setup logging to file
 logger = logging.getLogger('root')
-hdlr = logging.FileHandler('isams_tools.log')
+logging_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'isams_tools.log')
+hdlr = logging.FileHandler(logging_path)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 
+# log debug output when in debug mode
 if DEBUG:
     logger.setLevel(logging.DEBUG)
 else:
@@ -16,16 +20,14 @@ else:
 
 # make sure this isn't called directly
 if __name__ == "__main__":
-    sys.stderr.write('Please use bin/isams_tools instead\n')
-    logger.warning('Please use bin/isams_tools instead')
+    logger.critical('Please use bin/isams_tools instead')
     sys.exit(1)
 
 # check we've got a settings file
 try:
     from settings import *
 except ImportError:
-    logger.warning('You have not renamed settings_example.py to settings.py\n')
-    sys.stderr('You have not renamed settings_example.py to settings.py\n')
+    logger.critical('You have not renamed settings_example.py to settings.py\n')
     sys.exit(1)
 
 logger.info('Started isams_tools with arguments:' + str(sys.argv))
@@ -44,4 +46,4 @@ def dispatch(module, **kwargs):
         else:
             rr.run(kwargs['stage'])
     else:
-        logger.warn("Incorrect module given")
+        logger.critical("Incorrect module given")

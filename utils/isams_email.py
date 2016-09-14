@@ -20,10 +20,9 @@ class ISAMSEmail:
         self.email['Subject'] = subject
 
         logger.debug(
-            "Preparing email with the following data:\nFrom: {0}\nTo: {1}\nBCC: {2}\nSubject: {3}: ".format(
+            "Preparing email with the following data: From: {0} To: {1} BCC: {2} Subject: {3}: ".format(
                 self.email['To'], self.email['From'], self.email['Bcc'], self.email['Subject']
             ))
-        logger.debug("\n{0}".format(message))
 
     def send(self):
         if EMAIL_SSL:
@@ -43,5 +42,5 @@ class ISAMSEmail:
             s.quit()
             logger.debug("Email sent successfully")
         except Exception as exc:
-            logger.info("Mail error: {0}".format(str(exc)))
-            sys.exit("mail failed; {0}".format(str(exc)))
+            logger.critical("Mail error: " + str(exc))
+            sys.exit(1)

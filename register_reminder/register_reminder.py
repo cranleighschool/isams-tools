@@ -97,7 +97,7 @@ class RegisterReminder:
         </Filters>
         """.format(self.start_date, self.end_date)
 
-        logger.debug("Filters:", filters)
+        logger.debug("Filters:" + filters)
 
         # create the connection to ISAMS and receive the parsed XML
         self.tree = connection.ISAMSConnection(URL, filters).get_tree()
@@ -126,7 +126,7 @@ class RegisterReminder:
         total_registered_students = len(reg_students)
 
         if total_registered_students == 0:
-            logger.info("No registrations found, chances are we shouldn't be running")
+            logger.critical("No registrations found, chances are we shouldn't be running")
             sys.exit(1)
 
         # Remove somes students if we're in debug mode to enable us to test
@@ -135,14 +135,14 @@ class RegisterReminder:
                 reg_students.pop()
             total_registered_students = len(reg_students)
 
-            logger.debug("Total students: {0}".format(total_students))
-            logger.debug("Registered students: {0}".format(total_registered_students))
+        logger.info("Total students: {0}".format(total_students))
+        logger.info("Registered students: {0}".format(total_registered_students))
 
         # the difference between the two sets is our list of missing student IDs
         missing_students_ids = (list(set(all_students) - set(reg_students)))
 
         if total_students == total_registered_students:
-            logger.info("No outstanding students, exiting")
+            logger.critical("No outstanding students, exiting")
             sys.exit(0)
 
         missing_students = []
@@ -221,9 +221,9 @@ def run(stage=1):
                 sys.exit(0)
 
             if today_dt.weekday() not in WORKING_DAYS:
-                logger.info("Today is a weekend, you need to fix your cronjob")
+                logger.warning("Today is a weekend, you need to fix your cronjob")
                 sys.exit(1)
 
             RegisterReminder(today, tomorrow, stage)
     else:
-        logger.info("Not running: disabled in settings")
+        logger.critical("Not running: disabled in settings")
