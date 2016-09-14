@@ -27,7 +27,7 @@ EMAIL = {
 # iSAMS Bulk API key
 key = "93FSGD-FDSFS2-VRECSF-2FD3VF"
 
-# iSAMS URL, be sure to end with ?apiKey={{{0}}} to allow for the api key to be replace
+# iSAMS URL, be sure to end with ?apiKey={{{0}}} to allow for the api key to be replaced
 URL = 'https://isams.company.com/api/batch/1.0/xml.ashx?apiKey={{{0}}}'
 URL = URL.format(key)
 
