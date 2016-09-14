@@ -44,8 +44,8 @@ class ISAMSEmail:
                 s.login(EMAIL['username'], EMAIL['password'])
 
             recipients = [EMAIL['to'], EMAIL['cc'], EMAIL['bcc']]
-            recipients = '. '.join(filter(None, recipients))
-            
+            recipients = ', '.join(filter(None, recipients))
+
             s.sendmail(self.msg['From'], recipients, self.msg.as_string())
             s.quit()
             logger.debug("Email sent successfully")
