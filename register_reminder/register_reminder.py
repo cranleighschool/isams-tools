@@ -1,10 +1,12 @@
 import datetime as dt
 import logging
 import sys
+
 from settings import *
 from utils import connection
 from utils.isams_email import ISAMSEmail
 
+# make sure this isn't called directly
 if __name__ == "__main__":
     sys.stderr.write('Please use bin/isams_tools instead\n')
     sys.exit(1)
@@ -100,53 +102,68 @@ class RegisterReminder:
         if len(reg_students) == 0:
             sys.exit("No registrations found, chances are we shouldn't be running")
 
-        # Remove one student if we're in debug mode
+        # Remove somes students if we're in debug mode to enable us to test
         if DEBUG:
-            reg_students.pop()
-            reg_students.pop()
-            reg_students.pop()
+            for i in range(1, 50):
+                reg_students.pop()
 
             total_students = len(all_students)
             total_registered_students = len(reg_students)
             logger.debug("Total students: {0}".format(total_students))
             logger.debug("Registered students: {0}".format(total_registered_students))
 
+        # the difference between the two sets is our list of missing student IDs
         missing_students_ids = (list(set(all_students) - set(reg_students)))
         missing_students = []
         teachers = {}
 
+        # loop through each student ID, finding the student, their form and their form teacher
         for student in missing_students_ids:
-            # assuming SchoolId is unique, get the student details
-            leaf = self.tree.findall('.//*[SchoolId="' + student + '"]')[0]
-            student_forename = leaf.find('Forename').text
-            student_surname = leaf.find('Surname').text
-            student_form = leaf.find('Form').text
+            try:
+                leaf = self.tree.findall('.//*[SchoolId="' + student + '"]')[0]
+                student_forename = leaf.find('Forename').text
+                student_surname = leaf.find('Surname').text
+                student_form = leaf.find('Form').text
 
-            # add the student details to our list
-            missing_students.append(
-                {'forename': student_forename,
-                 'surname': student_surname,
-                 'form': student_form}
-            )
+                # add the student details to our list, not used yet
+                missing_students.append(
+                    {'forename': student_forename,
+                     'surname': student_surname,
+                     'form': student_form
+                     }
+                )
 
-            # assuming FormId is unique, find the form and its teacher
-            form = self.tree.findall('.//Form/[@Id="' + student_form + '"]')[0]
-            tutor_id = form.get('TutorId')
-            tutor = self.tree.findall('.//StaffMember/[@Id="' + tutor_id + '"]')[0]
-            forename = tutor.find('Forename').text
-            surname = tutor.find('Surname').text
-            form_name = student_form
-            email = tutor.find('SchoolEmailAddress').text
+                form = self.tree.findall('.//Form/[@Id="' + student_form + '"]')[0]
+                tutor_id = form.get('TutorId')
+                logging.debug("Looking for tutor with ID {0}".format(tutor_id))
 
-            # TODO: currently doesn't send a list of students
-            if tutor_id not in teachers:
-                teachers[tutor_id] = {
-                    'forename': forename,
-                    'surname': surname,
-                    'email': email,
-                    'form': form_name}
+                try:
+                    tutor = self.tree.findall('.//StaffMember/[@Id="' + tutor_id + '"]')[0]
+                    forename = tutor.find('Forename').text
+                    surname = tutor.find('Surname').text
+                    form_name = student_form
+                    email = tutor.find('SchoolEmailAddress').text
 
-            logging.debug("{0} {1} {2} {3} {4}".format(student_forename, student_surname, student_form, forename, email))
+                    # TODO: currently doesn't send a list of students
+                    if tutor_id not in teachers:
+                        teachers[tutor_id] = {
+                            'forename': forename,
+                            'surname': surname,
+                            'email': email,
+                            'form': form_name}
+
+                    logging.debug("{0} {1} {2} {3} {4}".format(student_forename, student_surname, student_form,
+                                                               forename, email))
+
+                except IndexError as e:
+                    # we have a invalid (e.g. left) tutor which can happen, we have to ignore this
+                    logging.warning(
+                        "Error when finding the tutor of form {0}, this needs to be fixed in iSAMS".format(form))
+
+            except IndexError as e:
+                # we have an invalid student which probably shouldn't happen unless it's an old register date
+                logging.warning(
+                    "Error when finding student with ID of {0}, giving up".format(student))
 
         return teachers
 
