@@ -119,21 +119,28 @@ class RegisterReminder:
         for leaf in self.tree.iter('RegistrationStatus'):
             reg_students.append(leaf.find('PupilId').text)
 
-        if len(reg_students) == 0:
-            sys.exit("No registrations found, chances are we shouldn't be running")
+        total_students = len(all_students)
+        total_registered_students = len(reg_students)
+
+        if total_registered_students == 0:
+            logger.info("No registrations found, chances are we shouldn't be running")
+            sys.exit(1)
 
         # Remove somes students if we're in debug mode to enable us to test
         if DEBUG:
             for i in range(1, 5):
                 reg_students.pop()
 
-            total_students = len(all_students)
-            total_registered_students = len(reg_students)
             logger.debug("Total students: {0}".format(total_students))
             logger.debug("Registered students: {0}".format(total_registered_students))
 
         # the difference between the two sets is our list of missing student IDs
         missing_students_ids = (list(set(all_students) - set(reg_students)))
+
+        if total_students == total_registered_students:
+            logger.info("No outstanding students, exiting")
+            sys.exit(0)
+
         missing_students = []
         teachers = {}
 
