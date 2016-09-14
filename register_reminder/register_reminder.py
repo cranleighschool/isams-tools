@@ -124,7 +124,7 @@ class RegisterReminder:
 
         # Remove somes students if we're in debug mode to enable us to test
         if DEBUG:
-            for i in range(1, 50):
+            for i in range(1, 5):
                 reg_students.pop()
 
             total_students = len(all_students)
