@@ -43,7 +43,9 @@ class ISAMSEmail:
             if EMAIL_LOGIN:
                 s.login(EMAIL['username'], EMAIL['password'])
 
-            s.sendmail(self.msg['From'], self.msg['To'], self.msg.as_string())
+            recipients = EMAIL['to'] + ", " + EMAIL['cc'] + ", " + EMAIL['bcc']
+
+            s.sendmail(self.msg['From'], recipients, self.msg.as_string())
             s.quit()
             logger.debug("Email sent successfully")
         except Exception as exc:
