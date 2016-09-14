@@ -35,7 +35,7 @@ class ISAMSEmail:
         logger.debug("\n{0}".format(message))
 
     def send(self):
-        s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
+        s = smtplib.SMTP(EMAIL['server'], EMAIL['port'])
         try:
             s.login(EMAIL['username'], EMAIL['password'])
             s.sendmail(self.msg['From'], self.msg['To'], self.msg.as_string())
