@@ -41,7 +41,8 @@ def send_tutor_emails(teachers, stage):
         list_of_missing_registers += '{0} {1}: {2} \n'.format(this_teacher['forename'], this_teacher['surname'],
                                                               this_teacher['form'])
 
-    to = None
+    to = EMAIL['to']
+
     # TODO: this could be customisable
     if str(stage) == "1":
         message = FIRST_EMAIL
@@ -58,10 +59,12 @@ def send_tutor_emails(teachers, stage):
         message += "\n\nThis a debug email, the intented recipients were: " + bcc
         message += "\n\nStage " + str(stage)
         logger.debug("BCC list before we bin it: " + bcc)
-        bcc = EMAIL['bcc']
+
+        # if we're debugging, get rid of the BCC list, i.e. the intended teachers
+        bcc = ""
 
     # create the email but don't send yet
-    email = ISAMSEmail(message, bcc, to)
+    email = ISAMSEmail(EMAIL['subject'], message, to, EMAIL['from'], bcc)
 
     if SEND_EMAILS:
         email.send()
@@ -130,6 +133,7 @@ class RegisterReminder:
         if DEBUG:
             for i in range(1, 5):
                 reg_students.pop()
+            total_registered_students = len(reg_students)
 
             logger.debug("Total students: {0}".format(total_students))
             logger.debug("Registered students: {0}".format(total_registered_students))
@@ -213,9 +217,13 @@ def run(stage=1):
             today = today_dt.strftime('%Y-%m-%d')
 
             if today_dt.strftime('%Y-%m-%d') in HOLIDAYS:
-                sys.exit("Today is a holiday, exiting")
+                logger.info("Today is a holiday, exiting")
+                sys.exit(0)
 
             if today_dt.weekday() not in WORKING_DAYS:
-                sys.exit("Today is a weekend, exiting")
+                logger.info("Today is a weekend, you need to fix your cronjob")
+                sys.exit(1)
 
             RegisterReminder(today, tomorrow, stage)
+    else:
+        logger.info("Not running: disabled in settings")

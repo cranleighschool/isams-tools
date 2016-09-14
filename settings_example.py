@@ -4,14 +4,14 @@ ENABLED = True
 # if we're in testing mode, output more debug and allow testers to add their own email
 DEBUG = True
 
+# used with above, you can check the output of emails that would have been sent
+SEND_EMAILS = False
+
 # specify your own dates to use when testing, e.g. a date that has already had the register taken for
 DEBUG_START_DATE = '2016-09-01'
 DEBUG_END_DATE = '2016-09-02'
 
-# used with above, you can check the output of emails that would have been sent
-SEND_EMAILS = False
-
-# outgoing SMTP details, bcc will be appended to the list of teachers
+# outgoing SMTP details
 EMAIL = {
     'server': 'smtp.example.com',
     'port': 465,
@@ -20,8 +20,6 @@ EMAIL = {
     'subject': 'Register not completed',
     'from': 'isams@company.com',
     'to': 'isams@company.com',
-    'cc': '',
-    'bcc': 'reception@company.com, ',  # make sure the list ends with a comma
 }
 
 # whether to log into the SMTP server
@@ -91,4 +89,5 @@ iSAMS Bot
 
 """
 
+# separate with commas if you want more than one recipient
 FINAL_EMAIL_TO = "reception@company.com"

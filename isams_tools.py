@@ -30,6 +30,7 @@ except ImportError:
 
 logger.info('Started isams_tools with arguments:' + str(sys.argv))
 
+
 def dispatch(module, **kwargs):
     """Run the correct module
 

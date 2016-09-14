@@ -9,28 +9,19 @@ logger = logging.getLogger('root')
 
 
 class ISAMSEmail:
-    msg = None
+    """Creates an email object in order to send it, named so to prevent clashes, it doesn't do anything special"""
+    email = None
 
-    def __init__(self, message, bcc, to=None):
-        self.msg = MIMEText(message)
-
-        # if we have been sent a to address, e.g. stage 3 EMAIL_TO
-        if to:
-            self.msg['To'] = to
-        else:
-            self.msg['To'] = EMAIL['to']
-
-        self.msg['From'] = EMAIL['from']
-        self.msg['Cc'] = EMAIL['cc']
-
-        if bcc:
-            self.msg['Bcc'] = bcc
-
-        self.msg['Subject'] = EMAIL['subject']
+    def __init__(self, subject, message, to, email_from, bcc):
+        self.email = MIMEText(message)
+        self.email['To'] = to
+        self.email['From'] = email_from
+        self.email['Bcc'] = bcc
+        self.email['Subject'] = subject
 
         logger.debug(
-            "Preparing email with the following headers:\nFrom: {0}\nTo: {1}\nCC: {2}\nBCC: {3}\nSubject: {4}: ".format(
-                EMAIL['to'], EMAIL['from'], EMAIL['cc'], bcc, EMAIL['subject']
+            "Preparing email with the following data:\nFrom: {0}\nTo: {1}\nBCC: {2}\nSubject: {3}: ".format(
+                self.email['To'], self.email['From'], self.email['Bcc'], self.email['Subject']
             ))
         logger.debug("\n{0}".format(message))
 
@@ -39,14 +30,16 @@ class ISAMSEmail:
             s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
         else:
             s = smtplib.SMTP(EMAIL['server'], EMAIL['port'])
+
         try:
             if EMAIL_LOGIN:
                 s.login(EMAIL['username'], EMAIL['password'])
 
-            recipients = [EMAIL['to'], EMAIL['cc'], EMAIL['bcc']]
+            # concatenate recipients - BCC are just recipients not specified in To or CC
+            recipients = [self.email['To'], self.email['Bcc']]
             recipients = ', '.join(filter(None, recipients))
 
-            s.sendmail(self.msg['From'], recipients, self.msg.as_string())
+            s.sendmail(self.email['From'], recipients, self.email.as_string())
             s.quit()
             logger.debug("Email sent successfully")
         except Exception as exc:

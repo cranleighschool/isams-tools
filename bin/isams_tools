@@ -4,7 +4,8 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from isams_tools import dispatch # this must stay after the above line to work in CLI
+# noinspection PyPep8
+from isams_tools import dispatch  # this must stay after the above line to work in CLI
 
 if sys.argv[1] == "register_reminder":
     if int(sys.argv[2]) in range(1, 4):
