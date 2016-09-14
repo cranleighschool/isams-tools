@@ -24,7 +24,7 @@ EMAIL = {
     'bcc': 'reception@company.com, ',  # make sure the list ends with a comma
 }
 
-# iSAMS REST API key
+# iSAMS Bulk API key
 key = "93FSGD-FDSFS2-VRECSF-2FD3VF"
 
 # iSAMS URL, be sure to end with ?apiKey={{{0}}} to allow for the api key to be replace
