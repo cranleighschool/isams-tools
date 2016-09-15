@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # run this file from crontab, to run weekdays at 8am:
-# 0 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools > /var/log/isams_tools.log
+# 0 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder 1 > /var/log/isams_tools.log
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
