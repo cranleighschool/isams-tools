@@ -13,6 +13,14 @@ class ISAMSEmail:
     email = None
 
     def __init__(self, subject, message, to, email_from, bcc):
+        """Contructor for an ISAMSEmail object
+
+        :param subject: email subject
+        :param message: email message
+        :param to: recipients, command separated
+        :param email_from: email sender address
+        :param bcc: email BCC recipients
+        """
         self.email = MIMEText(message)
         self.email['To'] = to
         self.email['From'] = email_from
@@ -25,6 +33,7 @@ class ISAMSEmail:
             ))
 
     def send(self):
+        """Try to connect to the mail server and send the email"""
         if EMAIL_SSL:
             s = smtplib.SMTP_SSL(EMAIL['server'], EMAIL['port'])
         else:
