@@ -18,26 +18,15 @@ class ADSync:
     tree = None
 
     def __init__(self):
-        # filters that are required by iSAMS for this request TODO: move to connection?
-        filters = """<?xml version='1.0' encoding='utf-8'?>
-        <Filters>
-            <RegistrationManager>
-                <RegistrationStatus startDate="{0}" endDate="{1}" />
-            </RegistrationManager>
-        </Filters>
-        """.format("2016-09-08", "2016-09-09")
-
-        logger.debug("Filters:" + filters)
-
         # create the connection to ISAMS and receive the parsed XML
-        self.tree = connection.ISAMSConnection(URL, filters).get_tree()
+        self.tree = connection.ISAMSConnection(URL).get_tree()
 
         first_run = True
 
         previous_students = []
         all_students = []
 
-        student_file = Path("current_students.txt")
+        student_file = Path("current_students.b")
         if student_file.is_file():
             previous_students = pickle.load(open("current_students.b", "rb"))
             first_run = False
@@ -58,7 +47,7 @@ class ADSync:
             student_details = {'id': id, 'username': username, 'email': email, 'forename': forename, 'surname': surname}
             all_students.append(student_details)
 
-
+        logger.debug("Total students: " + str(len(all_students)))
         temp_student = None
 
         if not first_run:
@@ -79,4 +68,3 @@ class ADSync:
 
         pickle.dump(all_students, open("current_students.b", "wb"))
 
-        logger.debug("Total students: " + str(len(all_students)))
