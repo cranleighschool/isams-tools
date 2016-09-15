@@ -78,29 +78,21 @@ class RegisterReminder:
     end_date = None
     tree = None
 
-    def __init__(self, start_date, end_date, stage):
+    def __init__(self, stage):
         """RegisterReminder constructor
 
-        :param start_date: the start of the registration period, i.e. today, in the format YYYY-MM-DD
-        :param end_date: the end of the registration period, i.e. tomorrow, in the format YYYY-MM-DD
         :param stage: which stage of the reminders to run (1-3) which determines which email template to use
         """
-        self.start_date = start_date
-        self.end_date = end_date
 
-        # filters that are required by iSAMS for this request
-        filters = """<?xml version='1.0' encoding='utf-8'?>
-        <Filters>
-            <RegistrationManager>
-                <RegistrationStatus startDate="{0}" endDate="{1}" />
-            </RegistrationManager>
-        </Filters>
-        """.format(self.start_date, self.end_date)
-
-        logger.debug("Filters:" + filters)
+        today_dt = dt.datetime.today()
+        tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+        today = today_dt.strftime('%Y-%m-%d')
 
         # create the connection to ISAMS and receive the parsed XML
-        self.tree = connection.ISAMSConnection(URL, filters).get_tree()
+        if DEBUG:
+            self.tree = connection.ISAMSConnection(URL).get_tree()
+        else:
+            self.tree = connection.ISAMSConnection(URL, today, tomorrow).get_tree()
 
         # compile a unique list of tutors with unregistered kids
         list_of_tutors = self.check_for_unregistered_students()
