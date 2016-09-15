@@ -7,10 +7,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # noinspection PyPep8
 from isams_tools import dispatch  # this must stay after the above line to work in CLI
 
-if sys.argv[1] == "register_reminder":
+if sys.argv[1] == 'register_reminder':
     if int(sys.argv[2]) in range(1, 4):
         dispatch('register_reminder', stage=int(sys.argv[2]))
     else:
         print("Incorrect stage given", file=sys.stderr)
+elif sys.argv[1] == 'ad_sync':
+    dispatch('ad_sync')
 else:
     print("Incorrect module or parameters given", file=sys.stderr)

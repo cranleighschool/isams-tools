@@ -1,4 +1,5 @@
-from register_reminder import register_reminder as rr
+from ad_sync import ad_sync
+from register_reminder import register_reminder
 from settings import DEBUG
 import logging
 import os
@@ -42,8 +43,10 @@ def dispatch(module, **kwargs):
     """
     if module == 'register_reminder':
         if 'stage' not in kwargs:
-            rr.run()
+            register_reminder.run()
         else:
-            rr.run(kwargs['stage'])
+            register_reminder.run(kwargs['stage'])
+    elif module == 'ad_sync':
+        ad_sync.ADSync()
     else:
         logger.critical("Incorrect module given")
