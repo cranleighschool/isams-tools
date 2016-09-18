@@ -209,14 +209,17 @@ def run(stage=1):
     """
     # do some basic checks to see if we should be running
     if ENABLED:
-        if DEBUG:
-            RegisterReminder(DEBUG_START_DATE, DEBUG_END_DATE, stage)
-        else:
-            today_dt = dt.datetime.today()
-            tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
-            today = today_dt.strftime('%Y-%m-%d')
+        today_dt = dt.datetime.today()
+        tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+        today = today_dt.strftime('%Y-%m-%d')
 
-            if today_dt.strftime('%Y-%m-%d') in HOLIDAYS:
+        if DEBUG:
+            if DEBUG_START_DATE and DEBUG_END_DATE:
+                RegisterReminder(DEBUG_START_DATE, DEBUG_END_DATE, stage)
+            else:
+                RegisterReminder(today, tomorrow, stage)
+        else:
+            if today in HOLIDAYS:
                 logger.info("Today is a holiday, exiting")
                 sys.exit(0)
 
