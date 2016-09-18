@@ -1,3 +1,7 @@
+####################
+# General Settings #
+####################
+
 # enable or disable the whole program
 ENABLED = True
 
@@ -35,6 +39,10 @@ key = "93FSGD-FDSFS2-VRECSF-2FD3VF"
 URL = 'https://isams.company.com/api/batch/1.0/xml.ashx?apiKey={{{0}}}'
 URL = URL.format(key)
 
+#####################################
+# Register Reminder Module Settings #
+#####################################
+
 # Default: Monday - Friday, 0 = Mon, 6 = Sun
 WORKING_DAYS = (0, 1, 2, 3, 4)
 
@@ -51,7 +59,7 @@ HOLIDAYS = (
     '2017-01-06',
 )
 
-# email templates
+# Email Templates
 FIRST_EMAIL = """
 Dear Teacher,
 
@@ -91,3 +99,39 @@ iSAMS Bot
 
 # separate with commas if you want more than one recipient
 FINAL_EMAIL_TO = "reception@company.com"
+
+##################################
+# Active Directory Sync Settings #
+##################################
+
+# Connection details
+AD_SERVER = ''
+AD_USERNAME = ''  # in the form DOMAIN\\User
+AD_PASSWORD = ''
+AD_SEARCH_BASE = '' # e.g. OU=students,DC=domain,dc=com
+
+# Where to put the new student
+STUDENT_OU = ''
+
+# Whether to 'delete' or 'disable' students who leave
+STUDENT_REMOVE_OPTION = 'disable'
+
+# Person to email when issues arise with the sync
+AD_SYNC_ADMIN_EMAIL = ''
+
+# Domain to append to usernames to create emails
+USER_DOMAIN = 'acme.com'
+
+'''Username format help
+f = leading forename character
+F = trailing forename character
+s = leading surname character
+S = trailing forname character
+y = current year digit, e.g. in year 2010, yy will produce 10, yyyy will produce 2010
+Y = current year digit plus offset, as defined below
+
+'''
+USERNAME_FORMAT = "fffsssYYYY"
+
+# amount to add to the current year, set to 0 to ignore
+USERNAME_YEAR_OFFSET = 10
