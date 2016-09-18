@@ -105,8 +105,10 @@ class RegisterReminder:
         # compile a unique list of tutors with unregistered kids
         list_of_tutors = self.check_for_unregistered_students()
 
-        # send those tutors an email to remind them
-        send_tutor_emails(list_of_tutors, stage)
+        # no point sending a blank emails
+        if list_of_tutors:
+            # send those tutors an email to remind them
+            send_tutor_emails(list_of_tutors, stage)
 
     def check_for_unregistered_students(self):
         """Finds unregistered students and creates a unique list of their form teachers
