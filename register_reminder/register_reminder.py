@@ -3,7 +3,7 @@ import logging
 import sys
 
 from settings import *
-from utils import connection
+from utils import isams_connection
 from utils.isams_email import ISAMSEmail
 
 # make sure this isn't called directly
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 logger = logging.getLogger('root')
 
 
-def send_tutor_emails(teachers, stage):
+def send_tutor_emails(unregistered_students, stage):
     """Prepares the email list and email templates in order to send them
 
     :param teachers: the list of teacher dicts to send the email to, containing email, forename, surname, form
@@ -24,22 +24,27 @@ def send_tutor_emails(teachers, stage):
     bcc = ""
     list_of_missing_registers = ""
     message = ""
+    tutor_list = []
+
+
+    # create a unique list of tutors with unregistered students
+    for student in unregistered_students:
+        if student.form.teacher not in tutor_list:
+            tutor_list.append({'form':student.form.name, 'teacher': student.form.teacher})
 
     # compile the BCC list as well as the text for %list_of_missing_registers%
     i = 0
-    for teacher in teachers:
-        this_teacher = teachers[teacher]
-        if this_teacher['email']:
-            bcc += this_teacher['email']
+    for item in tutor_list:
+        if item['teacher'].email:
+            bcc += item['teacher'].email
 
         # don't put a comma for the last entry
-        if i < len(teachers) - 1:
+        if i < len(tutor_list) - 1:
             bcc += ", "
 
-        i += 1
+        list_of_missing_registers += "{0}: {1} {2}\n".format(item['form'],  item['teacher'].forename,  item['teacher'].surname)
 
-        list_of_missing_registers += '{0} {1}: {2} \n'.format(this_teacher['forename'], this_teacher['surname'],
-                                                              this_teacher['form'])
+        i += 1
 
     to = EMAIL['to']
 
@@ -76,9 +81,11 @@ class RegisterReminder:
     """A class to setup and execute a register reminder"""
     start_date = None
     end_date = None
+    connection = None
     tree = None
 
     def __init__(self, start_date, end_date, stage):
+        logger.debug("RegisterReminder({0}. {1}, {2}".format(start_date, end_date, stage))
         """RegisterReminder constructor
 
         :param start_date: the start of the registration period, i.e. today, in the format YYYY-MM-DD
@@ -88,117 +95,46 @@ class RegisterReminder:
         self.start_date = start_date
         self.end_date = end_date
 
-        # filters that are required by iSAMS for this request
-        filters = """<?xml version='1.0' encoding='utf-8'?>
-        <Filters>
-            <RegistrationManager>
-                <RegistrationStatus startDate="{0}" endDate="{1}" />
-            </RegistrationManager>
-        </Filters>
-        """.format(self.start_date, self.end_date)
-
-        logger.debug("Filters:" + filters)
-
-        # create the connection to ISAMS and receive the parsed XML
-        self.tree = connection.ISAMSConnection(URL, filters).get_tree()
+        # create the connection to ISAMS
+        self.connection = isams_connection.ISAMSConnection(URL, start_date, end_date)
 
         # compile a unique list of tutors with unregistered kids
-        list_of_tutors = self.check_for_unregistered_students()
+        unregistered_students = self.connection.get_unregistered_students()
 
         # no point sending a blank emails
-        if list_of_tutors:
+        if unregistered_students:
             # send those tutors an email to remind them
-            send_tutor_emails(list_of_tutors, stage)
+            send_tutor_emails(unregistered_students, stage)
+        else:
+            logger.info("No unregistered students, exiting")
+            exit(0)
 
     def check_for_unregistered_students(self):
-        """Finds unregistered students and creates a unique list of their form teachers
+        """Finds unregistered students
 
-        :return: teachers -- a dictionary of teachers who have unregistered student
+        :return: students -- a list of students who are unger
         """
-        all_students = []
-        reg_students = []
+        all_students = self.connection.get_all_students()
+        unregistered_students = self.connection.get_unregistered_students()
 
-        for student in self.tree.iter('Pupil'):
-            all_students.append(student.find('SchoolId').text)
-
-        for leaf in self.tree.iter('RegistrationStatus'):
-            reg_students.append(leaf.find('PupilId').text)
-
-        total_students = len(all_students)
-        total_registered_students = len(reg_students)
-
-        if total_registered_students == 0:
-            logger.critical("No registrations found, chances are we shouldn't be running")
-            sys.exit(1)
-
-        # Remove somes students if we're in debug mode to enable us to test
+        # Remove some students if we're in debug mode to enable us to test
         if DEBUG:
-            for i in range(1, 5):
-                reg_students.pop()
-            total_registered_students = len(reg_students)
+            # for i in range(1, 5):
+            #     unregistered_students.append(all_students.pop())
+            pass
 
-        logger.info("Total students: {0}".format(total_students))
-        logger.info("Registered students: {0}".format(total_registered_students))
+        logger.info("Total students: {0}".format(len(all_students)))
+        logger.info("Unregistered students: {0}".format(len(unregistered_students)))
 
-        # the difference between the two sets is our list of missing student IDs
-        missing_students_ids = (list(set(all_students) - set(reg_students)))
-
-        if total_students == total_registered_students:
-            logger.critical("No outstanding students, exiting")
+        if len(unregistered_students) == 0:
+            logger.info("No outstanding students, exiting")
             sys.exit(0)
 
-        missing_students = []
-        teachers = {}
+        teachers = []
 
-        # loop through each student ID, finding the student, their form and their form teacher
-        for student in missing_students_ids:
-            try:
-                leaf = self.tree.findall('.//*[SchoolId="' + student + '"]')[0]
-                student_forename = leaf.find('Forename').text
-                student_surname = leaf.find('Surname').text
-                student_form = leaf.find('Form').text
-
-                # add the student details to our list, not used yet
-                missing_students.append(
-                    {'forename': student_forename,
-                     'surname': student_surname,
-                     'form': student_form
-                     }
-                )
-
-                form = self.tree.findall('.//Form/[@Id="' + student_form + '"]')[0]
-                tutor_id = form.get('TutorId')
-                logging.debug("Looking for tutor with ID {0}".format(tutor_id))
-
-                try:
-                    tutor = self.tree.findall('.//StaffMember/[@Id="' + tutor_id + '"]')[0]
-                    forename = tutor.find('Forename').text
-                    surname = tutor.find('Surname').text
-                    form_name = student_form
-                    email = tutor.find('SchoolEmailAddress').text
-
-                    # TODO: currently doesn't send a list of students
-                    if tutor_id not in teachers:
-                        teachers[tutor_id] = {
-                            'forename': forename,
-                            'surname': surname,
-                            'email': email,
-                            'form': form_name}
-
-                    logging.debug("{0} {1} {2} {3} {4}".format(student_forename, student_surname, student_form,
-                                                               forename, email))
-
-                except IndexError as e:
-                    # we have a invalid (e.g. left) tutor which can happen, we have to ignore this
-                    logging.warning(
-                        "Error when finding the tutor of form {0}, this needs to be fixed in iSAMS".format(form))
-                    logging.warning(str(e))
-
-            except IndexError as e:
-                # we have an invalid student which probably shouldn't happen unless it's an old register date
-                logging.warning(
-                    "Error when finding student with ID of {0}, giving up".format(student))
-                logging.warning(str(e))
+        for student in unregistered_students:
+            if student.form.teacher not in teachers:
+                teachers.append(student.form.teacher)
 
         return teachers
 
@@ -210,6 +146,7 @@ def run(stage=1):
     :return: None
     """
     # do some basic checks to see if we should be running
+    logger.debug("run({0})")
     if ENABLED:
         today_dt = dt.datetime.today()
         tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
