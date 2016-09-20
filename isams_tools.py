@@ -1,4 +1,5 @@
 from register_reminder import register_reminder as rr
+from parents_evening import parents_evening as pe
 from settings import DEBUG
 import logging
 import os
@@ -45,5 +46,7 @@ def dispatch(module, **kwargs):
             rr.run()
         else:
             rr.run(kwargs['stage'])
+    elif module == 'parents_evening':
+        pe.run()
     else:
         logger.critical("Incorrect module given")

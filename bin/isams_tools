@@ -14,5 +14,7 @@ if sys.argv[1] == "register_reminder":
         dispatch('register_reminder', stage=int(sys.argv[2]))
     else:
         print("Incorrect stage given", file=sys.stderr)
+elif sys.argv[1] == "parents_evening":
+    dispatch('parents_evening')
 else:
     print("Incorrect module or parameters given", file=sys.stderr)
