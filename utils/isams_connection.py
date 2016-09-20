@@ -1,7 +1,8 @@
 import logging
 from xml.etree import ElementTree
-from settings import DEBUG
+from settings import DEBUG, URL
 
+import datetime as dt
 import requests
 import sys
 
@@ -16,7 +17,13 @@ class ISAMSConnection:
     start_date = None
     end_date = None
 
-    def __init__(self, url, start_date, end_date):
+    def __init__(self, url=URL, start_date=None, end_date=None):
+        if not start_date:
+            start_date = dt.datetime.today().strftime('%Y-%m-%d')
+
+        if not end_date:
+            end_date = (dt.datetime.today() + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+
         self.start_date = start_date
         self.end_date = end_date
 
@@ -38,19 +45,24 @@ class ISAMSConnection:
         tree = ElementTree.fromstring(xml)
 
         self.tree = tree
-        self.all_students = self.get_all_students()
 
     def get_tree(self) -> ElementTree:
         return self.tree
 
     def get_all_students(self):
+        if DEBUG:
+            print("start: get_all_students()")
         if not self.tree:
             logger.critical("Can't get students as no active iSAMS connection")
             sys.exit(1)
 
-        for this_student in self.tree.iter('Pupil'):
+        # exit(print(ElementTree.tostring(self.tree.findall("./PupilManager/CurrentPupils"), encoding='utf8', method='xml')))
+        # exit(print(self.tree.findall("./PupilManager/CurrentPupils")[0]))
+
+        for this_student in self.tree.findall("./PupilManager/CurrentPupils")[0]:
             isams_id = this_student.find('SchoolId').text
             forename = this_student.find('Forename').text
+
             surname = this_student.find('Surname').text
             # username = this_student.find('UserName').text
             username = None
@@ -62,21 +74,44 @@ class ISAMSConnection:
 
             student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
             self.all_students[isams_id] = student
-            if isams_id not in self.all_students.keys():
-                print("Didn't manage to add " + isams_id)
-            if isams_id == '043858705547':
-                print(student)
-                print(self.all_students[isams_id])
+
+        if DEBUG:
+            print("end: get_all_students()")
         return self.all_students
 
-    def get_student(self, isams_id):
-        if isams_id in self.all_students:
-            student =  self.all_students[isams_id]
+    def get_student(self, isams_id, use_all_students=True):
+        # we have the students loaded to use
+        if use_all_students:
+            if len(self.all_students) == 0:
+                print("Length is 0 so getting again")
+                self.all_students = self.get_all_students()
+
+            if isams_id in self.all_students:
+                student =  self.all_students[isams_id]
+            else:
+                student = None
+        # search for students
         else:
-            student = None
+            for this_student in self.tree.findall("./PupilManager/CurrentPupils")[0]:
+                    if isams_id == this_student.find('SchoolId').text:
+                        forename = this_student.find('Forename').text
+
+                        surname = this_student.find('Surname').text
+                        username = this_student.find('UserName').text
+                        username = None
+                        email = this_student.find('EmailAddress').text
+                        email = None
+                        form = this_student.find('Form').text
+                        academic_year = this_student.find('NCYear').text
+                        form = self.get_form_from_name(this_student.find('Form').text)
+
+                        student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
+
         return student
 
     def get_unregistered_students(self):
+        if len(self.all_students) == 0:
+            self.all_students = self.get_all_students()
         for register_entry in self.tree.iter('RegistrationStatus'):
             registration_status = int(register_entry.find('Registered').text)
             if registration_status == 0:
