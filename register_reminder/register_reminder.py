@@ -114,7 +114,6 @@ class RegisterReminder:
 
         :return: students -- a list of students who are unger
         """
-        all_students = self.connection.get_all_students()
         unregistered_students = self.connection.get_unregistered_students()
 
         # Remove some students if we're in debug mode to enable us to test
@@ -123,7 +122,6 @@ class RegisterReminder:
             #     unregistered_students.append(all_students.pop())
             pass
 
-        logger.info("Total students: {0}".format(len(all_students)))
         logger.info("Unregistered students: {0}".format(len(unregistered_students)))
 
         if len(unregistered_students) == 0:

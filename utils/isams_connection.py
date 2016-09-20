@@ -80,6 +80,7 @@ class ISAMSConnection:
         return self.all_students
 
     def get_student(self, isams_id, use_all_students=True):
+        student = None
         # we have the students loaded to use
         if use_all_students:
             if len(self.all_students) == 0:
@@ -92,38 +93,47 @@ class ISAMSConnection:
                 student = None
         # search for students
         else:
-            for this_student in self.tree.findall("./PupilManager/CurrentPupils")[0]:
-                    if isams_id == this_student.find('SchoolId').text:
-                        forename = this_student.find('Forename').text
+            this_student = None
+            try:
+                this_student = self.tree.findall("./PupilManager/CurrentPupils/Pupil[SchoolId='{0}']".format(isams_id))[0]
 
-                        surname = this_student.find('Surname').text
-                        username = this_student.find('UserName').text
-                        username = None
-                        email = this_student.find('EmailAddress').text
-                        email = None
-                        form = this_student.find('Form').text
-                        academic_year = this_student.find('NCYear').text
-                        form = self.get_form_from_name(this_student.find('Form').text)
+                forename = this_student.find('Forename').text
+                surname = this_student.find('Surname').text
+                username = this_student.find('UserName').text
+                username = None
+                email = this_student.find('EmailAddress').text
+                email = None
+                form = this_student.find('Form').text
+                academic_year = this_student.find('NCYear').text
+                form = self.get_form_from_name(this_student.find('Form').text)
 
-                        student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
+                student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
+
+            except IndexError as e:
+                # student has left
+                pass
 
         return student
 
     def get_unregistered_students(self):
-        if len(self.all_students) == 0:
-            self.all_students = self.get_all_students()
         for register_entry in self.tree.iter('RegistrationStatus'):
             registration_status = int(register_entry.find('Registered').text)
-            if registration_status == 0:
+            try:
+                present_code = int(register_entry.find('PresentCode').text)
+            except AttributeError:
+                pass
+
+            if registration_status == 0 and present_code == 0:
                 isams_id = register_entry.find('PupilId').text
-                student = self.get_student(isams_id)
+                student = self.get_student(isams_id, False)
 
                 # if we have a student who leaves this can sometimes be None
                 if student:
                     self.unregistered_students.append(student)
 
         if DEBUG:
-            self.unregistered_students.append(self.get_student('091159705547'))
+            # self.unregistered_students.append(self.get_student('091159705547', False))
+            pass
 
         return self.unregistered_students
 
