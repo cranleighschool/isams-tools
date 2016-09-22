@@ -24,25 +24,28 @@ def send_tutor_emails(unregistered_students, stage):
     bcc = ""
     list_of_missing_registers = ""
     message = ""
-    tutor_list = []
+    tutor_list = {}
 
 
     # create a unique list of tutors with unregistered students
     for student in unregistered_students:
-        if student.form.teacher not in tutor_list:
-            tutor_list.append({'form':student.form.name, 'teacher': student.form.teacher})
+        if student.form.teacher.id not in tutor_list:
+            # looks a bit silly but we need it later on
+            student.form.teacher.form = student.form
+            tutor_list[student.form.teacher.id] = student.form.teacher
 
     # compile the BCC list as well as the text for %list_of_missing_registers%
     i = 0
-    for item in tutor_list:
-        if item['teacher'].email:
-            bcc += item['teacher'].email
+    for tutor_id in tutor_list:
+        tutor = tutor_list[tutor_id]
+        if tutor.email:
+            bcc += tutor.email
 
         # don't put a comma for the last entry
         if i < len(tutor_list) - 1:
             bcc += ", "
 
-        list_of_missing_registers += "{0}: {1} {2}\n".format(item['form'],  item['teacher'].forename,  item['teacher'].surname)
+        list_of_missing_registers += "{0}: {1} {2}\n".format(tutor.form.name,  tutor.forename,  tutor.surname)
 
         i += 1
 
@@ -99,7 +102,7 @@ class RegisterReminder:
         self.connection = isams_connection.ISAMSConnection(URL, start_date, end_date)
 
         # compile a unique list of tutors with unregistered kids
-        unregistered_students = self.connection.get_unregistered_students()
+        unregistered_students = self.get_unregistered_students()
 
         # no point sending a blank emails
         if unregistered_students:
@@ -109,32 +112,31 @@ class RegisterReminder:
             logger.info("No unregistered students, exiting")
             exit(0)
 
-    def check_for_unregistered_students(self):
-        """Finds unregistered students
+    def get_unregistered_students(self):
+        unregistered_students = []
+        tree = self.connection.get_tree()
+        for register_entry in tree.iter('RegistrationStatus'):
+            registration_status = int(register_entry.find('Registered').text)
+            present_code = None
 
-        :return: students -- a list of students who are unger
-        """
-        unregistered_students = self.connection.get_unregistered_students()
+            try:
+                present_code = int(register_entry.find('Code').text)
+            except AttributeError:
+                pass
 
-        # Remove some students if we're in debug mode to enable us to test
+            if registration_status == 0 and not present_code:
+                isams_id = register_entry.find('PupilId').text
+                student = self.connection.get_student(isams_id, False)
+
+                # if we have a student who leaves this can sometimes be None
+                if student:
+                    unregistered_students.append(student)
+
         if DEBUG:
-            # for i in range(1, 5):
-            #     unregistered_students.append(all_students.pop())
+            # self.unregistered_students.append(self.get_student('091159705547', False))
             pass
 
-        logger.info("Unregistered students: {0}".format(len(unregistered_students)))
-
-        if len(unregistered_students) == 0:
-            logger.info("No outstanding students, exiting")
-            sys.exit(0)
-
-        teachers = []
-
-        for student in unregistered_students:
-            if student.form.teacher not in teachers:
-                teachers.append(student.form.teacher)
-
-        return teachers
+        return unregistered_students
 
 
 def run(stage=1):

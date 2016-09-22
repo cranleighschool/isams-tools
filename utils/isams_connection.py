@@ -62,18 +62,15 @@ class ISAMSConnection:
             logger.critical("Can't get students as no active iSAMS connection")
             sys.exit(1)
 
-        # exit(print(ElementTree.tostring(self.tree.findall("./PupilManager/CurrentPupils"), encoding='utf8', method='xml')))
-        # exit(print(self.tree.findall("./PupilManager/CurrentPupils")[0]))
-
         for this_student in self.tree.findall("./PupilManager/CurrentPupils")[0]:
             isams_id = this_student.find('SchoolId').text
             forename = this_student.find('Forename').text
 
             surname = this_student.find('Surname').text
-            # username = this_student.find('UserName').text
-            username = None
-            # email = this_student.find('EmailAddress').text
-            email = None
+            username = this_student.find('UserName').text
+            # username = None
+            email = this_student.find('EmailAddress').text
+            # email = None
             form = this_student.find('Form').text
             academic_year = this_student.find('NCYear').text
             form = self.get_form_from_name(this_student.find('Form').text)
@@ -106,44 +103,18 @@ class ISAMSConnection:
                 forename = this_student.find('Forename').text
                 surname = this_student.find('Surname').text
                 username = this_student.find('UserName').text
-                username = None
                 email = this_student.find('EmailAddress').text
-                email = None
                 form = this_student.find('Form').text
                 academic_year = this_student.find('NCYear').text
                 form = self.get_form_from_name(this_student.find('Form').text)
 
                 student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
 
-            except IndexError as e:
+            except (IndexError, AttributeError):
                 # student has left
                 pass
 
         return student
-
-    def get_unregistered_students(self):
-        for register_entry in self.tree.iter('RegistrationStatus'):
-            registration_status = int(register_entry.find('Registered').text)
-            present_code = None
-
-            try:
-                present_code = int(register_entry.find('PresentCode').text)
-            except AttributeError:
-                pass
-
-            if registration_status == 0 and (present_code == 0 or not present_code):
-                isams_id = register_entry.find('PupilId').text
-                student = self.get_student(isams_id, False)
-
-                # if we have a student who leaves this can sometimes be None
-                if student:
-                    self.unregistered_students.append(student)
-
-        if DEBUG:
-            # self.unregistered_students.append(self.get_student('091159705547', False))
-            pass
-
-        return self.unregistered_students
 
     def get_form_from_name(self, form_name):
         form_data = self.tree.findall('.//Form/[@Id="' + form_name + '"]')[0]
@@ -163,19 +134,21 @@ class ISAMSConnection:
                 "Error when finding the tutor of form {0}, this needs to be fixed in iSAMS".format(form_data))
             logging.warning(str(e))
 
-        tutor = ISAMSTeacher(forename, surname, username, email)
+        tutor = ISAMSTeacher(tutor_id, forename, surname, username, email)
         form = ISAMSForm(form_name, tutor, academic_year)
 
         return form
 
 
 class ISAMSTeacher():
+    id = ""
     forename = ""
     surname = ""
     username = ""
     email = ""
 
-    def __init__(self, forename, surname, username, email):
+    def __init__(self, id, forename, surname, username, email):
+        self.id = id
         self.forename = forename
         self.surname = surname
         self.username = username
