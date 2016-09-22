@@ -28,11 +28,11 @@ In your Batch API methods, you need to enable the following:
 
 ```bash
 # runs the first reminder at 8am Monday-Friday
-0 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder 1 >/dev/null 2>&1 
+0 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder --args 1 >/dev/null 2>&1 
 
 # runs the second reminder at 8:30am Monday-Friday
-30 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder 2 >/dev/null 2>&1 
+30 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder --args 2 >/dev/null 2>&1 
 
 # runs the final reminder at 8:45am Monday-Friday
-45 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder 3 >/dev/null 2>&1
+45 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/bin/isams_tools register_reminder --args 3 >/dev/null 2>&1
 ```
