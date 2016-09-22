@@ -11,6 +11,9 @@ SEND_EMAILS = False
 DEBUG_START_DATE = '2016-09-01'
 DEBUG_END_DATE = '2016-09-02'
 
+# allows you to specify an XML file to test with rather tha using live data
+DEBUG_XML_DATA = ''
+
 # outgoing SMTP details
 EMAIL = {
     'server': 'smtp.example.com',

@@ -1,6 +1,6 @@
 import logging
 from xml.etree import ElementTree
-from settings import DEBUG, URL
+from settings import DEBUG, URL, DEBUG_XML_DATA
 
 import datetime as dt
 import requests
@@ -18,31 +18,37 @@ class ISAMSConnection:
     end_date = None
 
     def __init__(self, url=URL, start_date=None, end_date=None):
-        if not start_date:
-            start_date = dt.datetime.today().strftime('%Y-%m-%d')
+        # if we have an XML testing file set and we're in debug mode, use that instead of live data
+        if DEBUG and DEBUG_XML_DATA:
+            xml_file = open(DEBUG_XML_DATA, 'r')
+            tree = ElementTree.fromstring(xml_file.read())
+        # if not, make a connection
+        else:
+            if not start_date:
+                start_date = dt.datetime.today().strftime('%Y-%m-%d')
 
-        if not end_date:
-            end_date = (dt.datetime.today() + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+            if not end_date:
+                end_date = (dt.datetime.today() + dt.timedelta(days=1)).strftime('%Y-%m-%d')
 
-        self.start_date = start_date
-        self.end_date = end_date
+            self.start_date = start_date
+            self.end_date = end_date
 
-        # as we need to get all data, even if we're not looking at register we still need the filters
-        self.filters = """<?xml version='1.0' encoding='utf-8'?>
-        <Filters>
-            <RegistrationManager>
-                <RegistrationStatus startDate="{0}" endDate="{1}" />
-            </RegistrationManager>
-        </Filters>
-        """.format(self.start_date, self.end_date)
+            # as we need to get all data, even if we're not looking at register we still need the filters
+            self.filters = """<?xml version='1.0' encoding='utf-8'?>
+            <Filters>
+                <RegistrationManager>
+                    <RegistrationStatus startDate="{0}" endDate="{1}" />
+                </RegistrationManager>
+            </Filters>
+            """.format(self.start_date, self.end_date)
 
-        logger.debug("Filters:" + self.filters)
-        headers = {'Content-Type': 'application/xml'}
-        r = requests.post(url, data=self.filters, headers=headers)
-        logger.debug("Opening connection to: " + url)
-        xml = r.text
-        xml = xml.encode('utf16')
-        tree = ElementTree.fromstring(xml)
+            logger.debug("Filters:" + self.filters)
+            headers = {'Content-Type': 'application/xml'}
+            r = requests.post(url, data=self.filters, headers=headers)
+            logger.debug("Opening connection to: " + url)
+            xml = r.text
+            xml = xml.encode('utf16')
+            tree = ElementTree.fromstring(xml)
 
         self.tree = tree
 
@@ -118,12 +124,14 @@ class ISAMSConnection:
     def get_unregistered_students(self):
         for register_entry in self.tree.iter('RegistrationStatus'):
             registration_status = int(register_entry.find('Registered').text)
+            present_code = None
+
             try:
                 present_code = int(register_entry.find('PresentCode').text)
             except AttributeError:
                 pass
 
-            if registration_status == 0 and present_code == 0:
+            if registration_status == 0 and (present_code == 0 or not present_code):
                 isams_id = register_entry.find('PupilId').text
                 student = self.get_student(isams_id, False)
 
