@@ -24,11 +24,11 @@ class ISAMSEmail:
         self.email = MIMEText(message)
         self.email['To'] = to
         self.email['From'] = email_from
-        self.email['Bcc'] = bcc
+        self.email['Bcc'] = EMAIL['bcc'] + bcc
         self.email['Subject'] = subject
 
         logger.debug(
-            "Preparing email with the following data: From: {0} To: {1} BCC: {2} Subject: {3}: ".format(
+            "Preparing email with the following data: From: {1} To: {0} BCC: {2} Subject: {3}: ".format(
                 self.email['To'], self.email['From'], self.email['Bcc'], self.email['Subject']
             ))
 
