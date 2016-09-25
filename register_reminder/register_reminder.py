@@ -17,7 +17,7 @@ logger = logging.getLogger('root')
 def send_tutor_emails(unregistered_students, stage):
     """Prepares the email list and email templates in order to send them
 
-    :param teachers: the list of teacher dicts to send the email to, containing email, forename, surname, form
+    ::param unregistered_students: a list of ISAMSStudent objects
     :param stage: which stage email to send
     :return: None
     """
