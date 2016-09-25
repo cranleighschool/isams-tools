@@ -88,7 +88,7 @@ class RegisterReminder:
     tree = None
 
     def __init__(self, start_date, end_date, stage):
-        logger.debug("RegisterReminder({0}. {1}, {2}".format(start_date, end_date, stage))
+        logger.info("RegisterReminder({0}. {1}, {2}".format(start_date, end_date, stage))
         """RegisterReminder constructor
 
         :param start_date: the start of the registration period, i.e. today, in the format YYYY-MM-DD
@@ -132,10 +132,6 @@ class RegisterReminder:
                 if student:
                     unregistered_students.append(student)
 
-        if DEBUG:
-            # self.unregistered_students.append(self.get_student('091159705547', False))
-            pass
-
         return unregistered_students
 
 
@@ -146,7 +142,7 @@ def run(stage=1):
     :return: None
     """
     # do some basic checks to see if we should be running
-    logger.debug("run({0})")
+    logger.debug("run({0})".format(stage))
     if ENABLED:
         today_dt = dt.datetime.today()
         tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')

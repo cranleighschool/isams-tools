@@ -45,7 +45,7 @@ class ISAMSConnection:
             logger.debug("Filters:" + self.filters)
             headers = {'Content-Type': 'application/xml'}
             r = requests.post(url, data=self.filters, headers=headers)
-            logger.debug("Opening connection to: " + url)
+            logger.info("Opening connection to: " + url)
             xml = r.text
             xml = xml.encode('utf16')
             tree = ElementTree.fromstring(xml)
@@ -87,7 +87,6 @@ class ISAMSConnection:
         # we have the students loaded to use
         if use_all_students:
             if len(self.all_students) == 0:
-                print("Length is 0 so getting again")
                 self.all_students = self.get_all_students()
 
             if isams_id in self.all_students:
