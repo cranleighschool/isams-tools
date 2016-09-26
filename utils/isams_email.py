@@ -27,7 +27,7 @@ class ISAMSEmail:
         self.email['Bcc'] = EMAIL['bcc'] + bcc
         self.email['Subject'] = subject
 
-        logger.debug(
+        logger.info(
             "Preparing email with the following data: From: {1} To: {0} BCC: {2} Subject: {3}: ".format(
                 self.email['To'], self.email['From'], self.email['Bcc'], self.email['Subject']
             ))
@@ -49,7 +49,7 @@ class ISAMSEmail:
 
             s.sendmail(self.email['From'], recipients, self.email.as_string())
             s.quit()
-            logger.debug("Email sent successfully")
+            logger.info("Email sent successfully")
         except Exception as exc:
             logger.critical("Mail error: " + str(exc))
             sys.exit(1)
