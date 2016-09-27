@@ -102,10 +102,13 @@ class RegisterReminder:
         self.end_date = end_date
 
         # create the connection to ISAMS
-        self.connection = isams_connection.ISAMSConnection(URL, start_date, end_date)
+        # self.connection = isams_connection.iSAMSXMLConnection(URL, start_date, end_date)
+
+        cm = isams_connection.ConnectionManager()
+        self.connection = cm.connect()
 
         # compile a unique list of tutors with unregistered kids
-        unregistered_students = self.get_unregistered_students()
+        unregistered_students = self.connection.get_unregistered_students()
 
         # no point sending a blank emails
         if unregistered_students:
@@ -114,28 +117,6 @@ class RegisterReminder:
         else:
             logger.info("No unregistered students, exiting")
             exit(0)
-
-    def get_unregistered_students(self):
-        unregistered_students = []
-        tree = self.connection.get_tree()
-        for register_entry in tree.iter('RegistrationStatus'):
-            registration_status = int(register_entry.find('Registered').text)
-            present_code = None
-
-            try:
-                present_code = int(register_entry.find('Code').text)
-            except AttributeError:
-                pass
-
-            if registration_status == 0 and not present_code:
-                isams_id = register_entry.find('PupilId').text
-                student = self.connection.get_student(isams_id, False)
-
-                # if we have a student who leaves this can sometimes be None
-                if student:
-                    unregistered_students.append(student)
-
-        return unregistered_students
 
 
 def run(stage=1):

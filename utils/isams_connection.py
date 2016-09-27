@@ -1,33 +1,64 @@
 import logging
 from xml.etree import ElementTree
-from settings import DEBUG, URL, DEBUG_XML_DATA
+from settings import DEBUG, URL, DEBUG_DATA, CONNECTION_METHOD, API_KEY
 
 import datetime as dt
+import json
 import requests
 import sys
 
 logger = logging.getLogger('root')
 
 
-class ISAMSConnection:
-    tree = None
-    all_students = {}
-    unregistered_students = []
-    filters = None
-    start_date = None
-    end_date = None
+def get_url():
+    """Constructs the connection string based on settings
+    :return: the URL to connect to
+    """
+    if CONNECTION_METHOD == 'JSON':
+        return "{0}/api/batch/1.0/json.ashx?apiKey={{{1}}}".format(URL, API_KEY)
+    elif CONNECTION_METHOD == 'XML':
+        return "{0}/api/batch/1.0/xml.ashx?apiKey={{{1}}}".format(URL, API_KEY)
+    else:
+        logger.critical("Connection method not supported")
+        exit(1)
 
-    def __init__(self, url=URL, start_date=None, end_date=None):
-        # if we have an XML testing file set and we're in debug mode, use that instead of live data
-        if DEBUG and DEBUG_XML_DATA:
-            xml_file = open(DEBUG_XML_DATA, 'r')
-            tree = ElementTree.fromstring(xml_file.read())
-        # if not, make a connection
+
+class ConnectionManager:
+    """Helper class to abstract away the choice of connection"""
+    connection = None
+
+    def connect(self):
+        """Creates a suitable connection depending on settings
+        :return: the connection object
+        """
+        if CONNECTION_METHOD == 'JSON':
+            self.connection = iSAMSJSONConnection()
+        elif CONNECTION_METHOD == 'XML':
+            self.connection = iSAMSXMLConnection()
         else:
-            if not start_date:
+            exit("Connection method not supported")
+
+        self.connection.connect()
+        return self.connection
+
+class iSAMSConnection(object):
+    """Parent class of the connection types, does the generic stuff"""
+    data = None
+
+    def __init__(self, start_date=None, end_date=None):
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def connect(self):
+        if DEBUG_DATA:
+            logger.debug("Opening data file: " + DEBUG_DATA)
+            file = open(DEBUG_DATA, 'r')
+            self.data = file.read()
+        else:
+            if not self.start_date:
                 start_date = dt.datetime.today().strftime('%Y-%m-%d')
 
-            if not end_date:
+            if not self.end_date:
                 end_date = (dt.datetime.today() + dt.timedelta(days=1)).strftime('%Y-%m-%d')
 
             self.start_date = start_date
@@ -35,34 +66,115 @@ class ISAMSConnection:
 
             # as we need to get all data, even if we're not looking at register we still need the filters
             self.filters = """<?xml version='1.0' encoding='utf-8'?>
-            <Filters>
-                <RegistrationManager>
-                    <RegistrationStatus startDate="{0}" endDate="{1}" />
-                </RegistrationManager>
-            </Filters>
-            """.format(self.start_date, self.end_date)
+                    <Filters>
+                        <RegistrationManager>
+                            <RegistrationStatus startDate="{0}" endDate="{1}" />
+                        </RegistrationManager>
+                    </Filters>
+                    """.format(self.start_date, self.end_date)
 
             logger.debug("Filters:" + self.filters)
             headers = {'Content-Type': 'application/xml'}
+            url = get_url()
             r = requests.post(url, data=self.filters, headers=headers)
-            logger.info("Opening connection to: " + url)
-            xml = r.text
-            xml = xml.encode('utf16')
-            tree = ElementTree.fromstring(xml)
+            logger.info("Opening connection to: " + get_url())
+            self.data = r.text
 
-        self.tree = tree
+    def get_data(self):
+        return self.data
 
-    def get_tree(self) -> ElementTree:
-        return self.tree
+
+class iSAMSJSONConnection(iSAMSConnection):
+    """Object to represent a JSON specific connection"""
+    data = None
+
+    def __init__(self, url=URL, start_date=None, end_date=None):
+        logger.debug("Creating JSON connector")
+        super().__init__()
+
+    def connect(self):
+        logger.debug("Connecting using JSON connector")
+        super().connect()
+        self.data = json.loads(super().get_data())
+
+    def get_student(self, isams_id):
+        found_student = None
+        print("Looking for {0}".format(isams_id))
+        students = self.data['iSAMS']['PupilManager']['CurrentPupils']['Pupil']
+        for student in students:
+            if student['SchoolId'] == isams_id:
+                form = self.get_form_from_name(student['Form'])
+                found_student = ISAMSStudent(student['SchoolId'], student['Forename'], student['Surname'], student['UserName'],
+                                    student['EmailAddress'], student['NCYear'], form)
+
+        return found_student
+
+    def get_all_students(self):
+        raise NotImplementedError
+
+    def get_form_from_name(self, form_name):
+        found_form = None
+
+        forms = self.data['iSAMS']['SchoolManager']['Forms']['Form']
+        for form in forms:
+            if form['Form'] == form_name:
+                teacher = self.get_teacher_from_id(form['@TutorId'])
+                found_form = ISAMSForm(form['Form'], teacher, form['NationalCurriculumYear'])
+
+        return found_form
+
+    def get_teacher_from_id(self, teacher_id):
+        found_teacher = None
+
+        teachers = self.data['iSAMS']['HRManager']['CurrentStaff']['StaffMember']
+        for teacher in teachers:
+            if teacher['@Id'] == teacher_id:
+                found_teacher = ISAMSTeacher(teacher['@Id'], teacher['Forename'], teacher['Surname'],
+                                             teacher['UserName'], teacher['SchoolEmailAddress'])
+
+        return found_teacher
+
+    def get_unregistered_students(self):
+        unregistered_students = []
+        register_entries = self.data['iSAMS']['RegistrationManager']['RegistrationStatuses']['RegistrationStatus']
+        for entry in register_entries:
+            if entry['Registered'] == '0' and 'Code' not in entry:
+                student = self.get_student(entry['PupilId'])
+                form = self.get_form_from_name(entry)
+                unregistered_students.append(student)
+
+        return unregistered_students
+
+
+class iSAMSXMLConnection(iSAMSConnection):
+    """Object to represent an XML specific connection"""
+    data = None
+    all_students = {}
+    unregistered_students = []
+    filters = None
+    start_date = None
+    end_date = None
+
+    def __init__(self, url=URL, start_date=None, end_date=None):
+        logger.debug("Creating XML connector")
+        super().__init__()
+
+    def connect(self):
+        logger.debug("Connecting using XML connector")
+        super().connect()
+        self.data = tree = ElementTree.fromstring(super().get_data())
+
+    def get_data(self) -> ElementTree:
+        return self.data
 
     def get_all_students(self):
         if DEBUG:
             print("start: get_all_students()")
-        if not self.tree:
+        if not self.data:
             logger.critical("Can't get students as no active iSAMS connection")
             sys.exit(1)
 
-        for this_student in self.tree.findall("./PupilManager/CurrentPupils")[0]:
+        for this_student in self.data.findall("./PupilManager/CurrentPupils")[0]:
             isams_id = this_student.find('SchoolId').text
             forename = this_student.find('Forename').text
 
@@ -84,45 +196,33 @@ class ISAMSConnection:
 
     def get_student(self, isams_id, use_all_students=True):
         student = None
-        # we have the students loaded to use
-        if use_all_students:
-            if len(self.all_students) == 0:
-                self.all_students = self.get_all_students()
+        try:
+            this_student = self.data.findall("./PupilManager/CurrentPupils/Pupil[SchoolId='{0}']".format(isams_id))[0]
 
-            if isams_id in self.all_students:
-                student =  self.all_students[isams_id]
-            else:
-                student = None
-        # search for students
-        else:
-            this_student = None
-            try:
-                this_student = self.tree.findall("./PupilManager/CurrentPupils/Pupil[SchoolId='{0}']".format(isams_id))[0]
+            forename = this_student.find('Forename').text
+            surname = this_student.find('Surname').text
+            username = this_student.find('UserName').text
+            email = this_student.find('EmailAddress').text
+            form = this_student.find('Form').text
+            academic_year = this_student.find('NCYear').text
+            form = self.get_form_from_name(this_student.find('Form').text)
 
-                forename = this_student.find('Forename').text
-                surname = this_student.find('Surname').text
-                username = this_student.find('UserName').text
-                email = this_student.find('EmailAddress').text
-                form = this_student.find('Form').text
-                academic_year = this_student.find('NCYear').text
-                form = self.get_form_from_name(this_student.find('Form').text)
+            student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
 
-                student = ISAMSStudent(isams_id, forename, surname, username, email, academic_year, form)
-
-            except (IndexError, AttributeError):
-                # student has left
-                pass
+        except (IndexError, AttributeError):
+            # student has left
+            pass
 
         return student
 
     def get_form_from_name(self, form_name):
-        form_data = self.tree.findall('.//Form/[@Id="' + form_name + '"]')[0]
+        form_data = self.data.findall('.//Form/[@Id="' + form_name + '"]')[0]
         tutor_id = form_data.get('TutorId')
         academic_year = form_data.find('NationalCurriculumYear').text
         logging.debug("Looking for tutor with ID {0}".format(tutor_id))
 
         try:
-            tutor_data = self.tree.findall('.//StaffMember/[@Id="' + tutor_id + '"]')[0]
+            tutor_data = self.data.findall('.//StaffMember/[@Id="' + tutor_id + '"]')[0]
             forename = tutor_data.find('Forename').text
             surname = tutor_data.find('Surname').text
             username = tutor_data.find('UserName').text
@@ -138,6 +238,45 @@ class ISAMSConnection:
 
         return form
 
+    def get_unregistered_students(self):
+        unregistered_students = []
+        for register_entry in self.data.iter('RegistrationStatus'):
+            registration_status = int(register_entry.find('Registered').text)
+            present_code = None
+
+            try:
+                present_code = int(register_entry.find('Code').text)
+            except AttributeError:
+                pass
+
+            if registration_status == 0 and not present_code:
+                isams_id = register_entry.find('PupilId').text
+                student = self.get_student(isams_id, False)
+
+                # if we have a student who leaves this can sometimes be None
+                if student:
+                    unregistered_students.append(student)
+
+        return unregistered_students
+
+class SQLServerConnection():
+    def __init__(self):
+        raise NotImplementedError
+
+    def gettree(self):
+        raise NotImplementedError
+
+    def get_student(self):
+        raise NotImplementedError
+
+    def get_all_students(self):
+        raise NotImplementedError
+
+    def get_form_from_name(self, forn_name):
+        raise NotImplementedError
+
+    def get_unregistered_students(self):
+        raise NotImplementedError
 
 class ISAMSTeacher():
     id = ""
