@@ -23,6 +23,8 @@ EMAIL = {
     'subject': 'Register not completed',
     'from': 'isams@company.com',
     'to': 'isams@company.com',
+    'cc': 'reception@company.com',
+    'bcc': 'manager@company.com'
 }
 
 # whether to log into the SMTP server

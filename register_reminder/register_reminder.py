@@ -50,6 +50,7 @@ def send_tutor_emails(unregistered_students, stage):
         i += 1
 
     to = EMAIL['to']
+    cc = None
 
     # TODO: this could be customisable
     if str(stage) == "1":
@@ -59,6 +60,8 @@ def send_tutor_emails(unregistered_students, stage):
     elif str(stage) == "3":
         message = FINAL_EMAIL
         to = FINAL_EMAIL_TO
+        cc = EMAIL['cc']
+        bcc = EMAIL['bcc']
 
     # if the template uses the variable, replace is with the list of teachers
     message = message.replace('%list_of_missing_registers%', list_of_missing_registers)
@@ -72,7 +75,7 @@ def send_tutor_emails(unregistered_students, stage):
         bcc = ""
 
     # create the email but don't send yet
-    email = ISAMSEmail(EMAIL['subject'], message, to, EMAIL['from'], bcc)
+    email = ISAMSEmail(EMAIL['subject'], message, to, EMAIL['from'], cc, bcc)
 
     if SEND_EMAILS:
         email.send()

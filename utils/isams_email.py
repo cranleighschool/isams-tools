@@ -12,7 +12,7 @@ class ISAMSEmail:
     """Creates an email object in order to send it, named so to prevent clashes, it doesn't do anything special"""
     email = None
 
-    def __init__(self, subject, message, to, email_from, bcc):
+    def __init__(self, subject, message, to, email_from, cc, bcc):
         """Contructor for an ISAMSEmail object
 
         :param subject: email subject
@@ -24,12 +24,13 @@ class ISAMSEmail:
         self.email = MIMEText(message)
         self.email['To'] = to
         self.email['From'] = email_from
-        self.email['Bcc'] = EMAIL['bcc'] + bcc
+        self.email['Cc'] = cc
+        self.bcc_list = EMAIL['bcc'] + bcc
         self.email['Subject'] = subject
 
         logger.info(
-            "Preparing email with the following data: From: {1} To: {0} BCC: {2} Subject: {3}: ".format(
-                self.email['To'], self.email['From'], self.email['Bcc'], self.email['Subject']
+            "Preparing email with the following data: From: {1} To: {0} CC: {4} BCC: {2} Subject: {3}: ".format(
+                self.email['To'], self.email['From'], self.bcc_list, self.email['Subject'], self.email['Cc']
             ))
 
     def send(self):
@@ -43,9 +44,16 @@ class ISAMSEmail:
             if EMAIL_LOGIN:
                 s.login(EMAIL['username'], EMAIL['password'])
 
-            # concatenate recipients - BCC are just recipients not specified in To or CC
-            recipients = [self.email['To'], self.email['Bcc']]
-            recipients = ', '.join(filter(None, recipients))
+            # put together recipients - BCC are just recipients not specified in To or CC
+            recipients = []
+            if self.email['To']:
+                recipients = recipients + self.email['To'].split(', ')
+
+            if self.email['Cc']:
+                recipients = recipients + self.email['Cc'].split(', ')
+
+            if self.bcc_list:
+                recipients = recipients + self.bcc_list.split(', ')
 
             s.sendmail(self.email['From'], recipients, self.email.as_string())
             s.quit()
