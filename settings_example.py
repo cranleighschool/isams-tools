@@ -8,7 +8,7 @@ DEBUG = True
 SEND_EMAILS = True
 
 # iSAMS Batch API key
-key = "11D497FF-A7D9-4646-A6B8-D9D1B8718FAC"
+API_KEY = "11D497FF-A7D9-4646-A6B8-D9D1B8718FAC"
 
 # iSAMS URL
 URL = 'https://isams.school.com'
