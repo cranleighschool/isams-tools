@@ -1,6 +1,7 @@
 import logging
 from xml.etree import ElementTree
-from settings import DEBUG, URL, DEBUG_DATA, CONNECTION_METHOD, API_KEY#, DATABASE_URL
+from settings import DEBUG, URL, DEBUG_DATA, CONNECTION_METHOD, API_KEY, DATABASE_SERVER, DATABASE_USER, \
+    DATABASE_PASS, DATABASE
 
 import datetime as dt
 import json
@@ -270,7 +271,7 @@ class SQLServerConnection():
     def __init__(self):
         import pymssql
         print("Connection to SQL Server")
-        self.connection = pymssql.connect("SQL1", "Tower", "T0werp@55", "iSAMS", as_dict=True)
+        self.connection = pymssql.connect(DATABASE_SERVER, DATABASE_USER, DATABASE_PASS, DATABASE, as_dict=True)
         self.cursor = self.connection.cursor()
 
     def connect(self):

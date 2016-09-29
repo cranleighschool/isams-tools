@@ -17,7 +17,8 @@ URL = 'https://isams.school.com'
 CONNECTION_METHOD = 'JSON'
 
 # Database settings
-DATABASE_URL = ''
+DATABASE = ''
+DATABASE_SERVER = ''
 DATABASE_USER = ''
 DATABASE_PASSWORD = ''
 
