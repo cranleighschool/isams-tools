@@ -13,8 +13,13 @@ key = "11D497FF-A7D9-4646-A6B8-D9D1B8718FAC"
 # iSAMS URL
 URL = 'https://isams.school.com'
 
-# Choose which connection method from: JSON, XML, SQLServer
+# Choose which connection method from: JSON, XML, MSSQL
 CONNECTION_METHOD = 'JSON'
+
+# Database settings
+DATABASE_URL = ''
+DATABASE_USER = ''
+DATABASE_PASSWORD = ''
 
 # specify your own dates to use when testing, e.g. a date that has already had the register taken for
 DEBUG_START_DATE = '2016-09-18'
