@@ -17,36 +17,40 @@ logger = logging.getLogger('root')
 def send_tutor_emails(unregistered_students, stage):
     """Prepares the email list and email templates in order to send them
 
-    :param teachers: the list of teacher dicts to send the email to, containing email, forename, surname, form
+    ::param unregistered_students: a list of ISAMSStudent objects
     :param stage: which stage email to send
     :return: None
     """
     bcc = ""
     list_of_missing_registers = ""
     message = ""
-    tutor_list = []
+    tutor_list = {}
 
 
     # create a unique list of tutors with unregistered students
     for student in unregistered_students:
-        if student.form.teacher not in tutor_list:
-            tutor_list.append({'form':student.form.name, 'teacher': student.form.teacher})
+        if student.form.teacher.id not in tutor_list:
+            # looks a bit silly but we need it later on
+            student.form.teacher.form = student.form
+            tutor_list[student.form.teacher.id] = student.form.teacher
 
     # compile the BCC list as well as the text for %list_of_missing_registers%
     i = 0
-    for item in tutor_list:
-        if item['teacher'].email:
-            bcc += item['teacher'].email
+    for tutor_id in tutor_list:
+        tutor = tutor_list[tutor_id]
+        if tutor.email:
+            bcc += tutor.email
 
         # don't put a comma for the last entry
         if i < len(tutor_list) - 1:
             bcc += ", "
 
-        list_of_missing_registers += "{0}: {1} {2}\n".format(item['form'],  item['teacher'].forename,  item['teacher'].surname)
+        list_of_missing_registers += "{0}: {1} {2}\n".format(tutor.form.name,  tutor.forename,  tutor.surname)
 
         i += 1
 
     to = EMAIL['to']
+    cc = None
 
     # TODO: this could be customisable
     if str(stage) == "1":
@@ -56,6 +60,8 @@ def send_tutor_emails(unregistered_students, stage):
     elif str(stage) == "3":
         message = FINAL_EMAIL
         to = FINAL_EMAIL_TO
+        cc = EMAIL['cc']
+        bcc = EMAIL['bcc']
 
     # if the template uses the variable, replace is with the list of teachers
     message = message.replace('%list_of_missing_registers%', list_of_missing_registers)
@@ -69,7 +75,7 @@ def send_tutor_emails(unregistered_students, stage):
         bcc = ""
 
     # create the email but don't send yet
-    email = ISAMSEmail(EMAIL['subject'], message, to, EMAIL['from'], bcc)
+    email = ISAMSEmail(EMAIL['subject'], message, to, EMAIL['from'], cc, bcc)
 
     if SEND_EMAILS:
         email.send()
@@ -85,8 +91,9 @@ class RegisterReminder:
     tree = None
 
     def __init__(self, start_date, end_date, stage):
-        logger.debug("RegisterReminder({0}. {1}, {2}".format(start_date, end_date, stage))
+        logger.info("RegisterReminder({0}. {1}, {2}".format(start_date, end_date, stage))
         """RegisterReminder constructor
+
         :param start_date: the start of the registration period, i.e. today, in the format YYYY-MM-DD
         :param end_date: the end of the registration period, i.e. tomorrow, in the format YYYY-MM-DD
         :param stage: which stage of the reminders to run (1-3) which determines which email template to use
@@ -95,7 +102,10 @@ class RegisterReminder:
         self.end_date = end_date
 
         # create the connection to ISAMS
-        self.connection = isams_connection.ISAMSConnection(URL, start_date, end_date)
+        # self.connection = isams_connection.iSAMSXMLConnection(URL, start_date, end_date)
+
+        cm = isams_connection.ConnectionManager()
+        self.connection = cm.connect()
 
         # compile a unique list of tutors with unregistered kids
         unregistered_students = self.connection.get_unregistered_students()
@@ -109,36 +119,6 @@ class RegisterReminder:
             exit(0)
 
 
-    def check_for_unregistered_students(self):
-        """Finds unregistered students
-
-        :return: students -- a list of students who are unger
-        """
-        all_students = self.connection.get_all_students()
-        unregistered_students = self.connection.get_unregistered_students()
-
-        # Remove some students if we're in debug mode to enable us to test
-        if DEBUG:
-            # for i in range(1, 5):
-            #     unregistered_students.append(all_students.pop())
-            pass
-
-        logger.info("Total students: {0}".format(len(all_students)))
-        logger.info("Unregistered students: {0}".format(len(unregistered_students)))
-
-        if len(unregistered_students) == 0:
-            logger.info("No outstanding students, exiting")
-            sys.exit(0)
-
-        teachers = []
-
-        for student in unregistered_students:
-            if student.form.teacher not in teachers:
-                teachers.append(student.form.teacher)
-
-        return teachers
-
-
 def run(stage=1):
     """Creates and runs a RegisterReminder() instance after making a few sanity checks
 
@@ -146,7 +126,7 @@ def run(stage=1):
     :return: None
     """
     # do some basic checks to see if we should be running
-    logger.debug("run({0})")
+    logger.debug("run({0})".format(stage))
     if ENABLED:
         today_dt = dt.datetime.today()
         tomorrow = (today_dt + dt.timedelta(days=1)).strftime('%Y-%m-%d')
