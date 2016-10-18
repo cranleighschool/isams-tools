@@ -47,7 +47,7 @@ class iSAMSConnection():
                 username = None
                 email = None
 
-            this_student = Student(student['txtSchoolID'], student['txtForename'], student['txtSurname'],
+            this_student = Student(student['txtForename'], student['txtSurname'],
                                         username, email, student['intNCYear'],
                                         form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
             student_list.append(this_student)

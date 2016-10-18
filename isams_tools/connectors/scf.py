@@ -12,16 +12,28 @@ logger = logging.getLogger('root')
 class SCFConnector():
     STUDENT_TABLE = 'scf_web_pupil'
 
+    host = None
+    user = None
+    password = None
+    database = None
+
     cursor = None
     connection = None
 
+    def __contains__(self, item):
 
-    def __init__(self):
+
+
+    def __init__(self, host, user, password, database):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
         pass
 
     def connect(self):
         conn_string = "host='{0}' dbname='{1}' user='{2}' password='{3}'".format(
-            SCF['server'], SCF['database'], SCF['user'], SCF['password'])
+            self.host, self.database, self.user, self.password)
         logger.debug("Conncting to Postgres DB with string: {0}".format(conn_string))
         self.connection = psycopg2.connect(conn_string)
 
@@ -32,8 +44,9 @@ class SCFConnector():
         students = self.cursor.fetchall()
         student_list = []
         for student in students:
-            new_student = Student(None, student['first_name'], student['last_name'],
-                    None, None, student['year_id'], student['form_id'])
+            new_student = Student(student['first_name'], student['last_name'],
+                    None, None, student['year_id'], student['form_id'], None, None, None)
+
             student_list.append(student)
 
         return student_list

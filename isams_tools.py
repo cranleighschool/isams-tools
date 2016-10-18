@@ -1,4 +1,3 @@
-from ad_sync import ad_sync
 from register_reminder import register_reminder
 from settings import DEBUG
 

@@ -26,8 +26,7 @@ class Student():
     academic_year = None
     form = None
 
-    def __init__(self, isams_id, forename, surname, username, email, academic_year, form, date_of_birth, gender, sync_id):
-        self.isams_id = isams_id
+    def __init__(self, forename, surname, username, email, academic_year, form, date_of_birth, gender, sync_id):
         self.forename = forename
         self.surname = surname
         self.username = username
