@@ -22,7 +22,7 @@ class APIConnection(object):
         self.start_date = start_date
         self.end_date = end_date
 
-    def connect(self):
+    def connect(self, url):
         if DEBUG_DATA:
             logger.debug("Opening data file: " + DEBUG_DATA)
             file = open(DEBUG_DATA, 'r')
@@ -48,9 +48,8 @@ class APIConnection(object):
 
             logger.debug("Filters:" + self.filters)
             headers = {'Content-Type': 'application/xml'}
-            url = get_url()
             r = requests.post(url, data=self.filters, headers=headers)
-            logger.info("Opening connection to: " + get_url())
+            logger.info("Opening connection to: " + url)
             self.data = r.text
 
     def get_data(self):
@@ -68,7 +67,7 @@ class iSAMSJSONConnection(APIConnection):
 
     def connect(self):
         logger.debug("Connecting using JSON connector")
-        super().connect()
+        super().connect(self.url)
         self.data = json.loads(super().get_data())
 
     def get_student(self, isams_id):
@@ -78,8 +77,9 @@ class iSAMSJSONConnection(APIConnection):
         for student in students:
             if student['SchoolId'] == isams_id:
                 form = self.get_form_from_name(student['Form'])
-                found_student = ISAMSStudent(student['SchoolId'], student['Forename'], student['Surname'], student['UserName'],
-                                    student['EmailAddress'], student['NCYear'], form)
+                found_student = Student(student['Forename'], student['Surname'], student['UserName'],
+                                             student['EmailAddress'], student['NCYear'], form, student['DOB'],
+                                             student['Gender'], student['SchoolId'])
 
         return found_student
 
@@ -93,7 +93,7 @@ class iSAMSJSONConnection(APIConnection):
         for form in forms:
             if form['Form'] == form_name:
                 teacher = self.get_teacher_from_id(form['@TutorId'])
-                found_form = ISAMSForm(form['Form'], teacher, form['NationalCurriculumYear'])
+                found_form = Form(form['Form'], teacher, form['NationalCurriculumYear'])
 
         return found_form
 
@@ -103,7 +103,7 @@ class iSAMSJSONConnection(APIConnection):
         teachers = self.data['iSAMS']['HRManager']['CurrentStaff']['StaffMember']
         for teacher in teachers:
             if teacher['@Id'] == teacher_id:
-                found_teacher = ISAMSTeacher(teacher['@Id'], teacher['Forename'], teacher['Surname'],
+                found_teacher = Teacher(teacher['@Id'], teacher['Forename'], teacher['Surname'],
                                              teacher['UserName'], teacher['SchoolEmailAddress'])
 
         return found_teacher
@@ -136,7 +136,7 @@ class iSAMSXMLConnection(APIConnection):
 
     def connect(self):
         logger.debug("Connecting using XML connector")
-        super().connect()
+        super().connect(self.url)
         self.data = tree = ElementTree.fromstring(super().get_data())
 
     def get_data(self) -> ElementTree:
@@ -158,6 +158,8 @@ class iSAMSXMLConnection(APIConnection):
             form = this_student.find('Form').text
             academic_year = this_student.find('NCYear').text
             form = self.get_form_from_name(this_student.find('Form').text)
+            date_of_birth = this_student.find('DOB')
+            gender = this_student.find('Gender')
 
             try:
                 username = this_student.find('UserName').text
@@ -165,7 +167,7 @@ class iSAMSXMLConnection(APIConnection):
             except AttributeError:
                 pass
 
-            student = Student(isams_id, forename, surname, username, email, academic_year, form)
+            student = Student(forename, surname, username, email, academic_year, form, date_of_birth, gender, isams_id)
             self.all_students[isams_id] = student
 
         if DEBUG:
@@ -184,6 +186,8 @@ class iSAMSXMLConnection(APIConnection):
             form = this_student.find('Form').text
             academic_year = this_student.find('NCYear').text
             form = self.get_form_from_name(this_student.find('Form').text)
+            date_of_birth = this_student.find('DOB')
+            gender = this_student.find('Gender')
 
             try:
                 username = this_student.find('UserName').text
@@ -191,7 +195,7 @@ class iSAMSXMLConnection(APIConnection):
             except AttributeError:
                 pass
 
-            student = Student(isams_id, forename, surname, username, email, academic_year, form)
+            student = Student(forename, surname, username, email, academic_year, form, date_of_birth, gender, isams_id)
 
         except (IndexError, AttributeError):
             # student has left
