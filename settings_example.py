@@ -98,3 +98,16 @@ iSAMS Bot
 
 # separate with commas if you want more than one recipient
 FINAL_EMAIL_TO = "reception@company.com"
+
+
+#######################
+# Data Check Settings #
+#######################
+
+DATA_CHECK_ENABED = True
+
+# who to email when it fails
+DATA_CHECK_FAIL_EMAIL = "manager@company.com"
+
+# list of subjects to ignore from checks in single quotes
+DATA_CHECK_IGNORE_SUBJECTS = ["Games", "Physical Education"]
