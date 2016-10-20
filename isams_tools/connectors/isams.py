@@ -18,9 +18,7 @@ class iSAMSConnection():
             self.connection = pymssql.connect(server, user, password, database, as_dict=True)
             self.cursor = self.connection.cursor()
         except pymssql.InterfaceError:
-            logger.critical("Could not connect to {0} on host {1} with user {2}".format(DATABASE,
-                                                                                        DATABASE_SERVER,
-                                                                                        DATABASE_USER))
+            logger.critical("Could not connect to {0} on host {1} with user {2}".format(database, server, user))
             exit(1)
 
     def __contains__(self, item):
@@ -124,27 +122,30 @@ class iSAMSConnection():
                            p.txtSchoolID,
                            p.txtEmailAddress,
                            p.txtUserName,
-                           p.intNCYear
+                           p.intNCYear,
+                           p.txtDOB,
+                           p.txtGender
             FROM   [iSAMS].[dbo].[tblregistrationschoolregistrationpupils] AS r
                    INNER JOIN [iSAMS].[dbo].[tblpupilmanagementpupils] AS p
                            ON p.txtschoolid = r.txtschoolid
             WHERE  p.intsystemstatus = 1
-                   AND blnRegistered = 0
-                   AND intCode = NULL
+                   AND blnRegistered = 'false'
+                   AND intCode is NULL
                    AND intregister = (SELECT tblregistrationschoolregistrationregisterid
                                       FROM
-                       [iSAMS].[dbo].[tblregistrationschoolregistrationregister]
-                                      WHERE
-                       [tblregistrationschoolregistrationregister].intregistrationdatetime =
-                       (
-                       SELECT
-                       TOP(1) [tblregistrationschoolregistrationdatetimeid]
-                       FROM
-                               [iSAMS].[dbo].[tblregistrationschoolregistrationdatetime]
-                       WHERE
-                               CONVERT(DATE, txtdatetime) = CONVERT(DATE, Getdate())
-                       ORDER  BY
-                               txtdatetime ASC))
+                                       [iSAMS].[dbo].[tblregistrationschoolregistrationregister]
+                                                      WHERE
+                                       [tblregistrationschoolregistrationregister].intregistrationdatetime =
+                                       (
+                                           SELECT
+                                           TOP(1) [tblregistrationschoolregistrationdatetimeid]
+                                           FROM
+                                                   [iSAMS].[dbo].[tblregistrationschoolregistrationdatetime]
+                                           WHERE
+                                                   CONVERT(DATE, txtdatetime) = CONVERT(DATE, Getdate())
+                                           ORDER  BY
+                                                   txtdatetime ASC)
+                                        )
         """
 
         debug_query = """
@@ -157,7 +158,9 @@ class iSAMSConnection():
                                    p.txtSchoolID,
                                    p.txtEmailAddress,
                                    p.txtUserName,
-                                   p.intNCYear
+                                   p.intNCYear,
+                                   p.txtDOB,
+                                   p.txtGender
                     FROM   [iSAMS].[dbo].[tblregistrationschoolregistrationpupils] AS r
                            INNER JOIN [iSAMS].[dbo].[tblpupilmanagementpupils] AS p
                                    ON p.txtschoolid = r.txtschoolid
@@ -181,19 +184,25 @@ class iSAMSConnection():
                                        txtdatetime ASC))
                 """
 
-        if DEBUG:
-            self.cursor.execute(debug_query)
-        else:
-            self.cursor.execute(query)
+        self.cursor.execute(query)
 
         students = self.cursor.fetchall()
 
         for student in students:
             form = self.get_form_from_name(student['txtform'])
-            this_student = Student(student['txtSchoolID'], student['txtForename'], student['txtSurname'],
-                                        student['txtUserName'], student['txtEmailAddress'], student['intNCYear'],
-                                        form)
-            unregistered_students.append(this_student)
 
+            try:
+                username = student['txtUserName']
+                email = student['txtEmailAddress']
+            except KeyError:
+                pass
+            finally:
+                username = None
+                email = None
+
+            this_student = Student(student['txtforename'], student['txtsurname'],
+                                        username, email, student['intNCYear'],
+                                        form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
+            unregistered_students.append(this_student)
 
         return unregistered_students

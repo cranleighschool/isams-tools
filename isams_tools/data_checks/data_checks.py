@@ -1,7 +1,8 @@
 import logging
 
 from isams_tools.connectors.isams import iSAMSConnection
-from settings import DATABASE, DATABASE_SERVER, DATABASE_USER, DATABASE_PASS, DATA_CHECK_ENABED, DATA_CHECK_IGNORE_SUBJECTS, DATA_CHECK_FAIL_EMAIL
+from settings import ISAMS_DATABASE, ISAMS_DATABASE_SERVER, ISAMS_DATABASE_USER, ISAMS_DATABASE_PASS, DATA_CHECK_ENABED, \
+    DATA_CHECK_IGNORE_SUBJECTS, DATA_CHECK_FAIL_EMAIL
 from utils.isams_email import ISAMSEmail
 
 duplicate_pupil_in_sets = {}

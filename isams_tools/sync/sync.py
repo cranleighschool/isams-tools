@@ -1,5 +1,6 @@
 import logging
 
+from isams_tools.connectors.core import ConnectionManager
 from isams_tools.connectors.isams import iSAMSConnection
 from isams_tools.connectors.scf import SCFConnector
 from isams_tools.connectors.isams_api import iSAMSXMLConnection
@@ -29,6 +30,8 @@ def main():
 
 def get_connection(pair):
     connection = None
+
+    connection = ConnectionManager(pair['type'])
 
     if pair['type'] == 'scf':
         connection = SCFConnector(pair['server'], pair['user'], pair['password'], pair['database'])

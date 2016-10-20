@@ -2,6 +2,7 @@ import datetime as dt
 import logging
 
 from isams_tools.connectors import isams_api
+from isams_tools.connectors.core import ConnectionManager
 from isams_tools.utils.isams_email import ISAMSEmail
 from settings import *
 
@@ -100,16 +101,13 @@ class RegisterReminder:
         self.start_date = start_date
         self.end_date = end_date
 
-        # create the connection to ISAMS
-        # self.connection = isams_connection.iSAMSXMLConnection(URL, start_date, end_date)
-
-        cm = isams_api.ConnectionManager()
+        cm = ConnectionManager()
         self.connection = cm.connect()
 
         # compile a unique list of tutors with unregistered kids
         unregistered_students = self.connection.get_unregistered_students()
 
-        # no point sending a blank emails
+        # no point sending a blank email
         if unregistered_students:
             # send those tutors an email to remind them
             send_tutor_emails(unregistered_students, stage)

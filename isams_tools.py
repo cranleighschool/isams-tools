@@ -1,6 +1,3 @@
-from register_reminder import register_reminder
-from settings import DEBUG
-
 import argparse
 import logging
 import os
