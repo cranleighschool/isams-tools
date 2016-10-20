@@ -10,6 +10,7 @@ logger = logging.getLogger('root')
 class iSAMSConnection():
     connection = None
     cursor = None
+    STUDENT_TABLE = "TblPupilManagementPupils"
 
     def __init__(self, server, user, password, database):
 
@@ -22,14 +23,40 @@ class iSAMSConnection():
                                                                                         DATABASE_USER))
             exit(1)
 
+    def __contains__(self, item):
+        if type(item) is Student:
+            student = self.get_student(item.sync_id)
+            return bool(student)
+        else:
+            raise NotImplementedError
+
     def connect(self):
         pass
 
-    def get_student(self):
-        raise NotImplementedError
+    def get_student(self, isams_id):
+        query = "SELECT * FROM [iSAMS].[dbo].[TblPupilManagementPupils] WHERE txtSchoolID = %s"
+        self.cursor.execute(query, (isams_id,))
+        student = self.cursor.fetchone()
+        if student:
+            form = self.get_form_from_name(student['txtForm'])
+            try:
+                username = student['txtUserName']
+                email = student['txtEmailAddress']
+            except KeyError:
+                pass
+            finally:
+                username = None
+                email = None
+
+            this_student = Student(student['txtForename'], student['txtSurname'],
+                                   username, email, student['intNCYear'],
+                                   form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
+            return this_student
+        else:
+            return None
 
     def get_all_students(self):
-        query = "SELECT TOP 10 * FROM [iSAMS].[dbo].[TblPupilManagementPupils] WHERE intSystemStatus = 1"
+        query = "SELECT * FROM [iSAMS].[dbo].[TblPupilManagementPupils] WHERE intSystemStatus = 1"
         self.cursor.execute(query)
         students = self.cursor.fetchall()
         student_list = []

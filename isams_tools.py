@@ -7,7 +7,6 @@ import os
 import sys
 
 from isams_tools.sync import sync
-from isams_tools.sync import new_sync
 from isams_tools.register_reminder.register_reminder import run as run_register_reminder
 from isams_tools.data_checks.data_checks import run as run_data_checks
 from settings import DEBUG
@@ -47,12 +46,10 @@ def dispatch(module, **kwargs):
             run_register_reminder()
         else:
             run_register_reminder(kwargs['stage'])
-    elif module == 'ad_sync':
-        sync.SyncConnector()
     elif module == 'data_checks':
         run_data_checks()
-    elif module == 'new_sync':
-        new_sync.main()
+    elif module == 'sync':
+        sync.main()
     else:
         logger.critical("Incorrect module given")
 
@@ -77,12 +74,10 @@ def main():
             dispatch('register_reminder', stage=int(args.args[0]))
         else:
             exit("register_reminder needs an argument of 1-3 for the stage, e.g. isams_tools register_reminder --args 1")
-    elif args.module == 'ad_sync':
-        dispatch('ad_sync')
     elif args.module == 'data_checks':
         dispatch('data_checks')
-    elif args.module == 'new_sync':
-        dispatch('new_sync')
+    elif args.module == 'sync':
+        dispatch('sync')
     else:
         exit("Incorrect module given")
 

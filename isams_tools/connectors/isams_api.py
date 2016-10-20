@@ -152,18 +152,18 @@ class iSAMSXMLConnection(APIConnection):
         for this_student in self.data.findall("./PupilManager/CurrentPupils")[0]:
             email = ""
             username = ""
-            isams_id = this_student.find('SchoolId').text
-            forename = this_student.find('Forename').text
-            surname = this_student.find('Surname').text
-            form = this_student.find('Form').text
-            academic_year = this_student.find('NCYear').text
-            form = self.get_form_from_name(this_student.find('Form').text)
-            date_of_birth = this_student.find('DOB')
-            gender = this_student.find('Gender')
+            isams_id = str(this_student.find('SchoolId').text)
+            forename = str(this_student.find('Forename').text)
+            surname = str(this_student.find('Surname').text)
+            form = str(this_student.find('Form').text)
+            academic_year = str(this_student.find('NCYear').text)
+            form = str(self.get_form_from_name(this_student.find('Form').text))
+            date_of_birth = str(this_student.find('DOB').text)
+            gender = str(this_student.find('Gender').text)
 
             try:
-                username = this_student.find('UserName').text
-                email = this_student.find('EmailAddress').text
+                username = str(this_student.find('UserName').text)
+                email = str(this_student.find('EmailAddress').text)
             except AttributeError:
                 pass
 

@@ -20,8 +20,17 @@ class SCFConnector():
     cursor = None
     connection = None
 
+    # define our own contains so we can check "if student in scf_connection"
     def __contains__(self, item):
-
+        if type(item) is Student:
+            query = "SELECT id FROM scf_web_pupil WHERE mis_id = %s"
+            self.cursor.execute(query, (item.sync_id,))
+            if self.cursor.fetchone():
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
     def __init__(self, host, user, password, database):
@@ -40,14 +49,15 @@ class SCFConnector():
         self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     def get_all_students(self):
-        self.cursor.execute("SELECT * FROM %s" % self.STUDENT_TABLE)
+        self.cursor.execute("SELECT * FROM scf_web_pupil")
         students = self.cursor.fetchall()
         student_list = []
         for student in students:
-            new_student = Student(student['first_name'], student['last_name'],
-                    None, None, student['year_id'], student['form_id'], None, None, None)
+            new_student = Student(student['first_name'], student['last_name'], student['username'], student['email'],
+                                  student['year_id'], student['form_id'], student['dob'], student['gender'],
+                                  student['mis_id'])
 
-            student_list.append(student)
+            student_list.append(new_student)
 
         return student_list
 
@@ -56,12 +66,47 @@ class SCFConnector():
             (first_name, last_name, date_of_birth, gender, form_id, year_id, mis_id, added, created_by_id, updated)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
-        data = (student.forename, student.surname,
-                            student.date_of_birth, student.gender, "1",
-                            "1", student.sync_id, datetime.now().strftime("%Y-%m-%d"), "1", datetime.now().strftime("%Y-%m-%d"))
+        data = (student.forename, student.surname, student.date_of_birth, student.gender, "1",  "1", student.sync_id,
+                datetime.now().strftime("%Y-%m-%d"), "1", datetime.now().strftime("%Y-%m-%d"))
 
         self.cursor.execute(query, data)
         self.connection.commit()
 
     def check_student_exists(self, student):
         query = """SELECT * FROM scf_web_pupil"""
+
+
+    def exact_student_exists(self, student):
+        query = """SELECT * FROM scf_web_pupil
+                   WHERE first_name = %s
+                   AND last_name = %s
+                   AND date_of_birth = %s
+                   AND username = %s
+                   AND email = %s
+                   AND form_id = %s
+                   AND year_id = %s
+                   AND mis_id = %s"""
+        # TODO: need to get form and year details from DB here
+        data = (student.forename, student.surname, student.date_of_birth, student.username, student.email, 1, 1, student.sync_id)
+
+        self.cursor.execute(query, data)
+        student = self.cursor.fetchone()
+
+        return student
+
+    def update_student(self, student):
+        query = """UPDATE "scf_web_pupil"
+                          SET first_name = %s
+                          , last_name = %s
+                          , date_of_birth = %s
+                          , username = %s
+                          , email = %s
+                          , form_id = %s
+                          , year_id = %s
+                          WHERE mis_id = %s"""
+        # TODO: need to get form and year details from DB here
+        data = (student.forename, student.surname, student.date_of_birth, student.username, student.email, 1, 1,
+                student.sync_id)
+
+        self.cursor.execute(query, data)
+        self.connection.commit()
