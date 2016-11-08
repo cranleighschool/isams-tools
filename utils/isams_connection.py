@@ -172,12 +172,7 @@ class iSAMSXMLConnection(APIConnection):
     def connect(self):
         logger.debug("Connecting using XML connector")
         super().connect()
-        parent_data = super().get_data()
-        if not parent_data:
-            logger.critical("iSAMS returned no data, exiting")
-            exit(1)
-        else:
-            self.data = ElementTree.fromstring(super().get_data())
+        self.data = ElementTree.fromstring(super().get_data())
 
     def get_data(self) -> ElementTree:
         return self.data
