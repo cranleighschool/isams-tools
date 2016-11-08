@@ -83,7 +83,12 @@ class APIConnection(object):
             url = get_url()
             r = requests.post(url, data=self.filters, headers=headers)
             logger.info("Opening connection to: " + get_url())
-            self.data = r.text
+            if len(r.text) < 500:
+                logger.critical("Error recieved from API: {0}".format(r.text))
+                exit(1)
+            else:
+                self.data = r.text
+			
 
     def get_data(self):
         return self.data
@@ -167,7 +172,12 @@ class iSAMSXMLConnection(APIConnection):
     def connect(self):
         logger.debug("Connecting using XML connector")
         super().connect()
-        self.data = tree = ElementTree.fromstring(super().get_data())
+        parent_data = super().get_data()
+        if not parent_data:
+            logger.critical("iSAMS returned no data, exiting")
+            exit(1)
+        else:
+            self.data = ElementTree.fromstring(super().get_data())
 
     def get_data(self) -> ElementTree:
         return self.data
