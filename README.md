@@ -1,14 +1,14 @@
-iSAMS Tools README
-==================
+iSAMS Tools
+===========
 
-This software is a group of modules that work with or provide addition funcionality to iSAMS (http://isams.co.uk). See each module for its documentation.
+This software is a group of modules that work with, or provide addition functionality, for iSAMS (http://isams.co.uk). See each module for its documentation.
 
 Register Reminder
 -----------------
 
 Sends emails to tutors who have not registered all students.
 
-**Requirements**: iSAMS (with Batch API key setup, see below), Python 3, python packages from requirements.txt, postfix/sendmail
+**Requirements**: iSAMS; either a database user, or a Batch API key setup; (see below), Python 3; python packages from requirements.txt and postfix/sendmail
 **Recommended**: Linux (but should work with any OS with Python and a command-line scheduler)
 
 1. If you don't have access to iSAMS database (cloud install), you will need to use the API. If you wish to use the database directly, set CONNECTION_METHOD to 'MSSQL' in settings.py and skip to step 5
@@ -19,7 +19,7 @@ Sends emails to tutors who have not registered all students.
 1. Edit `settings_example.py` and rename it to `settings.py`
 1. Add entries to crontab, as shown below (for Windows you will probably need AT: https://support.microsoft.com/en-us/kb/313565)
 
-**iSAMS Batch Method Requirements**
+**iSAMS API Setup**
 
 In your Batch API methods, you need to enable the following:
 
