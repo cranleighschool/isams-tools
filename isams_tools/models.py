@@ -6,7 +6,7 @@ class Teacher():
     email = ""
     status = 0
 
-    def __init__(self, id, forename, surname, email, title=None, sync_value=None, status=1, username=None):
+    def __init__(self, forename, surname, email, title=None, sync_value=None, status=1, username=None, id=None):
         self.id = id
         self.sync_value = sync_value
         self.forename = forename
@@ -21,7 +21,7 @@ class Teacher():
 
 
     def __str__(self):
-        return("{0}, {1}, {2}, {3}, {4}, {5}".format(self.forename, self.surname, self.title, self.email, self.sync_value, self.status))
+        return("forename={0}, surname={1}, title={2}, email={3}, sync_value={4}, status={5}".format(self.forename, self.surname, self.title, self.email, self.sync_value, self.status))
 
     def __eq__(self, other):
         equal = True
