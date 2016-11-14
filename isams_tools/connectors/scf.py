@@ -38,8 +38,8 @@ class SCFConnector():
             else:
                 return False
         elif type(item) is Form:
-          query = "SELECT id from scf_year_group WHERE nc_year= %s"
-          self.cursor.execute(query, (item.nc_year,))
+          query = "SELECT id from scf_web_form WHERE name = %s"
+          self.cursor.execute(query, (item.name,))
           if self.cursor.fetchone():
               return True
           else:
@@ -59,8 +59,8 @@ class SCFConnector():
             else:
               return False
         elif type(item) is YearGroup:
-            query = "SELECT id from scf_web_subject WHERE sync_value = %s"
-            self.cursor.execute(query, (item.sync_value,))
+            query = "SELECT id from scf_web_yeargroup WHERE nc_year = %s"
+            self.cursor.execute(query, (item.nc_year,))
             if self.cursor.fetchone():
                 return True
             else:
@@ -180,7 +180,7 @@ class SCFConnector():
             row = results[0]
             teacher = Teacher(row['first_name'], row['last_name'], row['title'], row['email'], row['sync_value'], row['is_active'])
         else:
-            print("No results for " + sync_value)
+            logger.warning("No results for " + sync_value)
         return teacher
 
 
@@ -242,8 +242,8 @@ class SCFConnector():
 
 
     def add_year_group(self, year_group):
-        payload = {'name': year_group.name, 'code': year_group.code, ' nc_year': year_group.nc_year }
-
+        payload = {'name': year_group.name, 'code': year_group.code, 'nc_year': year_group.nc_year}
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_year_group/1234", data=payload)
+        
         if r.status_code != '200':
             logger.critical('Error when adding year group: ' + r.text)

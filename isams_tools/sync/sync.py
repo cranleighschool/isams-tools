@@ -34,15 +34,17 @@ def main():
             new_teacher_check(left_connection, right_connection)
             updated_teacher_check(left_connection, right_connection)
 
-        if 'form' in pair['mappings']:
-            new_form_check(left_connection, right_connection)
-
         if 'subject' in pair['mappings']:
             new_department_check(left_connection, right_connection)
             new_subject_check(left_connection, right_connection)
 
         if 'year_group' in pair['mappings']:
             new_year_group_check(left_connection, right_connection)
+
+        if 'form' in pair['mappings']:
+            logger.info("Syncing forms")
+            new_form_check(left_connection, right_connection)
+
 
 def get_connection(pair):
     connection = None
