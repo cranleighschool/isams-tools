@@ -99,7 +99,6 @@ class iSAMSConnection():
             self.cursor.execute(query)
             teachers = self.cursor.fetchall()
 
-            # convert them into our internal representation
             for teacher in teachers:
                 this_teacher = Teacher(forename=teacher['forename'], surname=teacher['surname'], title=teacher['title'],
                                        email=teacher['email'], sync_value=teacher['school_id'])

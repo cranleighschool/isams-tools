@@ -41,6 +41,9 @@ def main():
             new_department_check(left_connection, right_connection)
             new_subject_check(left_connection, right_connection)
 
+        if 'year_group' in pair['mappings']:
+            new_year_group_check(left_connection, right_connection)
+
 def get_connection(pair):
     connection = None
 
@@ -149,3 +152,14 @@ def new_subject_check(left, right):
             subjects_added += 1
 
     logger.info("Added {0} new departments".format(str(subjects_added)))
+
+def new_year_group_check(left, right):
+    year_groups_added = 0
+
+    for year_group in left.get_all_year_groups():
+        if year_group not in right:
+            logger.info("{0} not found, creating".format(year_group.name))
+            right.add_year_group(year_group)
+            year_groups_added += 1
+
+    logger.info("Added {0} new year groups".format(str(year_groups_added)))
