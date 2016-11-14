@@ -1,9 +1,10 @@
 import psycopg2
 import psycopg2.extras
+import requests
 
 import logging
 from datetime import datetime
-from isams_tools.models import Form, Student, Teacher
+from isams_tools.models import Form, Student, Teacher, Department, Subject
 from settings import SCF
 
 
@@ -23,15 +24,42 @@ class SCFConnector():
     # define our own contains so we can check "if student in scf_connection"
     def __contains__(self, item):
         if type(item) is Student:
-            query = "SELECT id FROM scf_web_pupil WHERE mis_id = %s"
-            self.cursor.execute(query, (item.sync_id,))
+            query = "SELECT id FROM scf_web_pupil WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
             else:
                 return False
+        elif type(item) is Teacher:
+            query = "SELECT id FROM scf_web_staff WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
+            if self.cursor.fetchone():
+                return True
+            else:
+                return False
+        elif type(item) is Form:
+          query = "SELECT id from scf_web_form WHERE name= %s"
+          self.cursor.execute(query, (item.name,))
+          if self.cursor.fetchone():
+              return True
+          else:
+            return False
+        elif type(item) is Department:
+            query = "SELECT id from scf_web_department WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
+            if self.cursor.fetchone():
+                return True
+            else:
+              return False
+        elif type(item) is Subject:
+            query = "SELECT id from scf_web_subject WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
+            if self.cursor.fetchone():
+                return True
+            else:
+              return False
         else:
             return False
-
 
     def __init__(self, host, user, password, database):
         self.host = host
@@ -46,7 +74,7 @@ class SCFConnector():
         logger.debug("Conncting to Postgres DB with string: {0}".format(conn_string))
         self.connection = psycopg2.connect(conn_string)
 
-        self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        self.cursor = self.connection.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
     def get_all_students(self):
         self.cursor.execute("SELECT * FROM scf_web_pupil")
@@ -110,3 +138,97 @@ class SCFConnector():
 
         self.cursor.execute(query, data)
         self.connection.commit()
+
+    def get_all_teachers(self):
+        self.cursor.execute("SELECT * FROM scf_web_staff, auth_user WHERE scf_web_staff.user_id=auth_user.id")
+        teachers = self.cursor.fetchall()
+        teacher_list = []
+        for teacher in teachers:
+          if teacher['is_active'] == 'true':
+              status = 1
+          else:
+              status = -1
+              new_teacher = Teacher(teacher['forename'], teacher['surname'], teacher['title'], teacher['email'], teacher['school_id'], status)
+              teacher_list.append(new_teacher)
+
+        return teacher_list
+
+
+    def get_teacher(self, sync_value):
+        self.cursor.execute("""SELECT u.first_name
+        	,u.last_name
+        	,s.title
+        	,u.email
+        	,s.sync_value
+        	,u.is_active
+            FROM scf_web_staff as s, auth_user as u
+            WHERE s.sync_value=%s
+            AND u.id=s.user_id
+            """
+            , (sync_value,))
+        teacher = None
+        results = self.cursor.fetchall()
+        if results:
+            # have to use fetchall to get it as a dict
+            row = results[0]
+            teacher = Teacher(row['first_name'], row['last_name'], row['title'], row['email'], row['sync_value'], row['is_active'])
+        else:
+            print("No results for " + sync_value)
+        return teacher
+
+
+    def add_teacher(self, teacher):
+      payload = {'forename': teacher.forename, 'surname': teacher.surname, 'title': teacher.title, 'email': teacher.email, 'sync_value': teacher.sync_value, 'status': teacher.status}
+      headers = {'X-Requested-With': ': XMLHttpRequest-type'}
+
+      r = requests.post("http://staff.cranleigh.ae/scf/api/create_teacher/1234", data=payload, headers=headers)
+      if r.status_code != '200':
+          logger.critical('Error when adding teacher: ' + r.text[:500])
+    
+    def get_teacher_id(self, sync_id):
+        teacher = None
+        query = """SELECT user_id 
+                   FROM scf_web_staff
+                   WHERE sync_value='%s'
+                """
+        self.cursor.execute(query % user_code)
+        row = self.cursor.fetchone()
+        return row['id']
+    
+
+    def update_teacher(self, teacher):
+        payload = {'forename': teacher.forename, 'surname': teacher.surname, 'title': teacher.title, 'email': teacher.email, 'sync_value': teacher.sync_value, 'status': teacher.status}
+
+        r = requests.post("http://staff.cranleigh.ae/scf/api/update_teacher/1234", data=payload)
+        if r.status_code != '200':
+            logger.critical('Error when updating teacher: ' + r.text)
+
+    def add_form(self, form):
+        payload = {'name': form.name, 'nc_year': form.nc_year, 'teacher_sync_value': form.teacher.sync_value}
+
+        r = requests.post("http://staff.cranleigh.ae/scf/api/create_form/1234", data=payload)
+        if r.status_code != '200':
+            logger.critical('Error when adding form: ' + r.text)
+
+    def add_department(self, department):
+        if department.head_of_department:
+            hod = department.head_of_department.sync_value
+        else:
+            hod = None
+
+        payload = {'name': department.name, 'code': department.code, 'head_of_department': hod, 'sync_value': department.sync_value}
+
+        r = requests.post("http://staff.cranleigh.ae/scf/api/create_department/1234", data=payload)
+        if r.status_code != '200':
+            logger.critical('Error when adding departments: ' + r.text)
+
+    def add_subject(self, subject):
+      # FIXME HoS
+      try:
+          payload = {'name': subject.name, 'code': subject.code, 'department': subject.department.sync_value or None, 'head_of_subject': '', 'sync_value': subject.sync_value}
+      except AttributeError:
+          payload = {'name': subject.name, 'code': subject.code, 'department': None, 'head_of_subject': '', 'sync_value': subject.sync_value}
+
+      r = requests.post("http://staff.cranleigh.ae/scf/api/create_subject/1234", data=payload)
+      if r.status_code != '200':
+          logger.critical('Error when adding subject: ' + r.text)

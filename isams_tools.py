@@ -24,12 +24,12 @@ if DEBUG:
 else:
     logger.setLevel(logging.INFO)
 
-def my_handler(type, value, tb):
-    logger.exception("Uncaught exception: {0}".format(str(value)))
+#def my_handler(type, value, tb):
+#    logger.exception("Uncaught exception: {0}".format(str(value)))
 
-if not DEBUG:
+#if not DEBUG:
     # Install exception handler
-    sys.excepthook = my_handler
+#    sys.excepthook = my_handler
 
 def dispatch(module, **kwargs):
     """Run the correct module

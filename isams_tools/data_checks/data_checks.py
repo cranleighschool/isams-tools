@@ -149,7 +149,7 @@ logger = logging.getLogger('root')
 def run():
     if DATA_CHECK_ENABED:
         logger.info("Starting data checks")
-        connection = iSAMSConnection(DATABASE_SERVER, DATABASE_USER, DATABASE_PASS, DATABASE)
+        connection = iSAMSConnection(ISAMS_DATABASE_SERVER, ISAMS_DATABASE_USER, ISAMS_DATABASE_PASS, ISAMS_DATABASE)
         connection.connect()
         cursor = connection.cursor
 

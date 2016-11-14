@@ -26,10 +26,13 @@ def send_tutor_emails(unregistered_students, stage):
     message = ""
     tutor_list = {}
 
-
     # create a unique list of tutors with unregistered students
     for student in unregistered_students:
-        if student.form.teacher.id not in tutor_list:
+        #if student.form.teacher not in tutor_list:
+        try:
+            tutor_list[student.form.teacher.id]
+        except KeyError:
+            print(str(student.form.teacher) + " not in list, adding ")
             # looks a bit silly but we need it later on
             student.form.teacher.form = student.form
             tutor_list[student.form.teacher.id] = student.form.teacher
@@ -106,14 +109,14 @@ class RegisterReminder:
 
         # compile a unique list of tutors with unregistered kids
         unregistered_students = self.connection.get_unregistered_students()
-
+        
         # no point sending a blank email
-        if unregistered_students:
+        if len(unregistered_students) > 0:
             # send those tutors an email to remind them
             send_tutor_emails(unregistered_students, stage)
         else:
-            logger.info("No unregistered students, exiting")
-            exit(0)
+            logger.info("No unregistered students, exiting") 
+            #exit(0)
 
 
 def run(stage=1):

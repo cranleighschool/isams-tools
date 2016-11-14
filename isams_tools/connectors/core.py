@@ -3,6 +3,7 @@ import logging
 from isams_tools.connectors.scf import SCFConnector
 from isams_tools.connectors.isams import iSAMSConnection
 from isams_tools.connectors.isams_api import iSAMSJSONConnection, iSAMSXMLConnection
+from isams_tools.connectors.middle import MiddleConnection
 from settings import CONNECTION_METHOD, ISAMS_DATABASE_SERVER, ISAMS_DATABASE, ISAMS_DATABASE_USER, ISAMS_DATABASE_PASS
 
 logger = logging.getLogger('root')
@@ -41,6 +42,8 @@ class ConnectionManager:
             self.type = 'MSSQL'
         elif method == 'scf':
                 connection = SCFConnector(connection['server'], connection['user'], connection['password'], connection['database'])
+        elif method == 'middle':
+            connection = MiddleConnector(connection['server'], connection['user'], connection['password'], connection['database'])
         else:
             exit("Connection method not supported")
 

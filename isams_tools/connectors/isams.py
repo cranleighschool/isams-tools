@@ -46,9 +46,9 @@ class iSAMSConnection():
                 username = None
                 email = None
 
-            this_student = Student(student['txtForename'], student['txtSurname'],
+            this_student = Student(student['txtSchoolID'], student['txtForename'], student['txtSurname'],
                                    username, email, student['intNCYear'],
-                                   form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
+                                   form, student['txtDOB'], student['txtGender'])
             return this_student
         else:
             return None
@@ -93,6 +93,16 @@ class iSAMSConnection():
 
         return form
 
+    def get_all_teachers(self):
+            query = "SELECT person.* from staff INNER JOIN person ON staff.person_id = person.id"
+            self.cursor.execute(query)
+            teachers = self.cursor.fetchall()
+
+            # convert them into our internal representation
+            for teacher in teachers:
+                this_teacher = Teacher(teacher['forename'], teacher['surname'], teacher['title'], teacher['email'], teacher['school_id'])
+                yield this_teacher
+
     def get_teacher_from_id(self, user_code):
         # the FK in forms is User_Code, so we have to use that
         teacher = None
@@ -103,7 +113,7 @@ class iSAMSConnection():
         self.cursor.execute(query % user_code)
         row = self.cursor.fetchone()
         if row:
-            teacher = Teacher(row['User_Code'], row['Firstname'], row['Surname'], row['User_Code'],
+            teacher = Teacher(row['TblStaffID'], row['Firstname'], row['Surname'], row['User_Code'],
                                    row['SchoolEmailAddress'])
 
         return teacher
@@ -111,7 +121,7 @@ class iSAMSConnection():
 
     def get_unregistered_students(self):
         unregistered_students = []
-        print("Getting students from SQL Server")
+        logger.info("Getting students from SQL Server")
         query = """
             SELECT DISTINCT( tblregistrationschoolregistrationpupilsid ),
                            r.intcode,
@@ -187,10 +197,8 @@ class iSAMSConnection():
         self.cursor.execute(query)
 
         students = self.cursor.fetchall()
-
         for student in students:
             form = self.get_form_from_name(student['txtform'])
-
             try:
                 username = student['txtUserName']
                 email = student['txtEmailAddress']
@@ -199,10 +207,9 @@ class iSAMSConnection():
             finally:
                 username = None
                 email = None
-
-            this_student = Student(student['txtforename'], student['txtsurname'],
+            
+            this_student = Student(student['txtSchoolID'], student['txtforename'], student['txtsurname'],
                                         username, email, student['intNCYear'],
-                                        form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
+                                        form, student['txtDOB'], student['txtGender'])
             unregistered_students.append(this_student)
-
         return unregistered_students
