@@ -4,7 +4,7 @@ import requests
 
 import logging
 from datetime import datetime
-from isams_tools.models import Form, Student, Teacher, Department, Subject
+from isams_tools.models import Form, Student, Teacher, Department, Subject, YearGroup
 from settings import SCF
 
 
@@ -38,8 +38,8 @@ class SCFConnector():
             else:
                 return False
         elif type(item) is Form:
-          query = "SELECT id from scf_web_form WHERE name= %s"
-          self.cursor.execute(query, (item.name,))
+          query = "SELECT id from scf_year_group WHERE nc_year= %s"
+          self.cursor.execute(query, (item.nc_yearg,))
           if self.cursor.fetchone():
               return True
           else:
@@ -58,6 +58,13 @@ class SCFConnector():
                 return True
             else:
               return False
+        elif type(item) is YearGroup:
+            query = "SELECT id from scf_web_subject WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
+            if self.cursor.fetchone():
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -232,3 +239,11 @@ class SCFConnector():
       r = requests.post("http://staff.cranleigh.ae/scf/api/create_subject/1234", data=payload)
       if r.status_code != '200':
           logger.critical('Error when adding subject: ' + r.text)
+
+
+    def add_year_group(self, year_group):
+        payload = {'name': year_group.name, 'code': year_group.code, ' nc_year': year_group.nc_year }
+
+        r = requests.post("http://staff.cranleigh.ae/scf/api/create_year_group/1234", data=payload)
+        if r.status_code != '200':
+            logger.critical('Error when adding year group: ' + r.text)

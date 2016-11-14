@@ -109,19 +109,37 @@ class Form():
     def __str__(self):
         return ("({0}, {1}, {2})".format(self.name, self.teacher, self.nc_year))
 
+class YearGroup():
+    name = None
+    code = None
+    nc_year = None
+    head_of_year = None
+
+    def __init__(self, name, code, nc_year, head_of_year=None):
+        self.name = name
+        self.code = code
+        self.nc_year = nc_year
+        self.head_of_year = head_of_year
 
 class Set():
-    name = None
+    code = None
     teacher = None
-    nc_year = None
-    sync_id = None
-    subject_id = None
-
-
-class SetList():
+    year_group = None
     sync_value = None
-    set = None
-    set_list = []
+    subject = None
+
+    def __init__(self, code, teacher, year_group, subject, sync_value):
+        self.code = code
+        self.teacher = teacher
+        self.year_group = year_group
+        self.subject = subject
+        self.sync_value = sync_value
+
+
+# class SetList():
+#     sync_value = None
+#     set = None
+#     set_list = []
 
 class Department():
     name = None
