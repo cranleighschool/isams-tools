@@ -51,5 +51,5 @@ The module has checks for the following common data issues, upon finding any, it
 * Show duplicate grade entries in a given report cycle
 * Show pupils in more than one set for the same subject
 
-Example usage
+**Example usage**
 `python3 /path/to/isams-tools/isams_tools.py data_checks`
