@@ -6,7 +6,7 @@ class Teacher():
     email = ""
     status = 0
 
-    def __init__(self, id, forename, surname, title, email, sync_value=None, status=1, username=None):
+    def __init__(self, id, forename, surname, email, title=None, sync_value=None, status=1, username=None):
         self.id = id
         self.sync_value = sync_value
         self.forename = forename
@@ -75,17 +75,17 @@ class Student():
     surname = None
     username = None
     email = None
-    academic_year = None
+    nc_year = None
     form = None
     id = None
 
-    def __init__(self, forename, surname, academic_year, form, username=None, email=None,
+    def __init__(self, forename, surname, nc_year, form, username=None, email=None,
                  date_of_birth=None, gender=None, sync_value=None, id=None):
         self.forename = forename
         self.surname = surname
         self.username = username
         self.email = email
-        self.academic_year = academic_year
+        self.nc_year = nc_year
         self.form = form
         self.date_of_birth = date_of_birth
         self.gender = gender
@@ -94,7 +94,7 @@ class Student():
 
     def __str__(self):
         return "(sv:{0}, f:{1}, s:{2}, u:{3}, e:{4}, ay:{5} form:{6})".\
-            format(self.sync_value, self.forename, self.surname, self.username, self.email, self.academic_year, self.form)
+            format(self.sync_value, self.forename, self.surname, self.username, self.email, self.nc_year, self.form)
 
 class Form():
     name = None
