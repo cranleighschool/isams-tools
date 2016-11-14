@@ -35,10 +35,12 @@ def main():
             updated_teacher_check(left_connection, right_connection)
 
         if 'subject' in pair['mappings']:
+            logger.info('Syncing subjects')
             new_department_check(left_connection, right_connection)
             new_subject_check(left_connection, right_connection)
 
         if 'year_group' in pair['mappings']:
+            logger.info('Syncing year groups')
             new_year_group_check(left_connection, right_connection)
 
         if 'form' in pair['mappings']:
