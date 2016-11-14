@@ -8,6 +8,7 @@ Sends emails to tutors who have not registered all students.
 **Requirements**: iSAMS (with Batch API key setup, see below), Python 3, python packages from requirements.txt, postfix/sendmail
 **Recommended**: Linux (but should work with any OS with Python and a command-line scheduler)
 
+1. If you don't have access to iSAMS database (cloud install), you will need to use the API. If you wish to use the database directly, set CONNECTION_METHOD to 'MSSQL' and skip to step 5
 1. `iSAMS > Control Panel > API Services Manager > Manage Batch API Keys > Request Batch API Key`
 1. API Key mode must be set to 'Development' (note: this causes data to be pulled directly from the DB, so be wary of executing too frequently)
 1. Once you have a new API key, edit the Batch methods to include those in the *iSAMS Batch Method Requirements* section
