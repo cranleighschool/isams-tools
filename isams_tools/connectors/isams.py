@@ -1,5 +1,4 @@
 import logging
-
 import pymssql
 
 from isams_tools.models import Form, Student, Teacher
@@ -46,9 +45,10 @@ class iSAMSConnection():
                 username = None
                 email = None
 
-            this_student = Student(student['txtSchoolID'], student['txtForename'], student['txtSurname'],
-                                   username, email, student['intNCYear'],
-                                   form, student['txtDOB'], student['txtGender'])
+            this_student = Student(sync_value=student['txtSchoolID'], forename=student['txtForename'],
+                                   surname=student['txtSurname'],username=username, email=email,
+                                   nc_year=student['intNCYear'], form=form, date_of_birth=student['txtDOB'],
+                                   gender=student['txtGender'])
             return this_student
         else:
             return None
@@ -72,9 +72,10 @@ class iSAMSConnection():
                 username = None
                 email = None
 
-            this_student = Student(student['txtForename'], student['txtSurname'],
-                                        username, email, student['intNCYear'],
-                                        form, student['txtDOB'], student['txtGender'], student['txtSchoolID'])
+            this_student = Student(forename=student['txtForename'], surname=student['txtSurname'],
+                                   username=username, email=email, nc_year=student['intNCYear'],
+                                   form=form, date_of_birth=student['txtDOB'],gender=student['txtGender'],
+                                   sync_value=student['txtSchoolID'])
             student_list.append(this_student)
 
         return student_list
@@ -89,7 +90,7 @@ class iSAMSConnection():
         row = self.cursor.fetchone()
         if row:
             teacher = self.get_teacher_from_id(row['txtFormTutor'])
-            form = Form(form_name, teacher, row['intNCYear'])
+            form = Form(name=form_name, teacher=teacher, nc_year=row['intNCYear'])
 
         return form
 
@@ -100,7 +101,8 @@ class iSAMSConnection():
 
             # convert them into our internal representation
             for teacher in teachers:
-                this_teacher = Teacher(teacher['forename'], teacher['surname'], teacher['title'], teacher['email'], teacher['school_id'])
+                this_teacher = Teacher(forename=teacher['forename'], surname=teacher['surname'], title=teacher['title'],
+                                       email=teacher['email'], sync_value=teacher['school_id'])
                 yield this_teacher
 
     def get_teacher_from_id(self, user_code):
@@ -113,8 +115,8 @@ class iSAMSConnection():
         self.cursor.execute(query % user_code)
         row = self.cursor.fetchone()
         if row:
-            teacher = Teacher(row['TblStaffID'], row['Firstname'], row['Surname'], row['User_Code'],
-                                   row['SchoolEmailAddress'])
+            teacher = Teacher(id=row['TblStaffID'], forename=row['Firstname'], surname=row['Surname'],
+                              sync_value=row['User_Code'], email=row['SchoolEmailAddress'])
 
         return teacher
 
@@ -208,8 +210,9 @@ class iSAMSConnection():
                 username = None
                 email = None
             
-            this_student = Student(student['txtSchoolID'], student['txtforename'], student['txtsurname'],
-                                        username, email, student['intNCYear'],
-                                        form, student['txtDOB'], student['txtGender'])
+            this_student = Student(sync_value=student['txtSchoolID'], forename=student['txtforename'],
+                                   surname=student['txtsurname'], username=username, email=email,
+                                   nc_year=student['intNCYear'], form=form, date_of_birth=student['txtDOB'],
+                                   gender=student['txtGender'])
             unregistered_students.append(this_student)
         return unregistered_students
