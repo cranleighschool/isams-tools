@@ -32,7 +32,6 @@ def send_tutor_emails(unregistered_students, stage):
         try:
             tutor_list[student.form.teacher.id]
         except KeyError:
-            print(str(student.form.teacher) + " not in list, adding ")
             # looks a bit silly but we need it later on
             student.form.teacher.form = student.form
             tutor_list[student.form.teacher.id] = student.form.teacher
@@ -112,6 +111,7 @@ class RegisterReminder:
         
         # no point sending a blank email
         if len(unregistered_students) > 0:
+            logger.info("{0} students unregistered, emailing".format(str(len(unregistered_students))))
             # send those tutors an email to remind them
             send_tutor_emails(unregistered_students, stage)
         else:
