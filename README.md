@@ -52,4 +52,5 @@ The module has checks for the following common data issues, upon finding any, it
 * Show pupils in more than one set for the same subject
 
 **Example usage**
+
 `python3 /path/to/isams-tools/isams_tools.py data_checks`
