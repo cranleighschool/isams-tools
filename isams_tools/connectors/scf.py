@@ -39,7 +39,7 @@ class SCFConnector():
                 return False
         elif type(item) is Form:
           query = "SELECT id from scf_year_group WHERE nc_year= %s"
-          self.cursor.execute(query, (item.nc_yearg,))
+          self.cursor.execute(query, (item.nc_year,))
           if self.cursor.fetchone():
               return True
           else:
