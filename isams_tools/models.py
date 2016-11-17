@@ -77,6 +77,7 @@ class Student():
     email = None
     nc_year = None
     form = None
+    gender = None
     id = None
 
     def __init__(self, forename, surname, nc_year, form, username=None, email=None,
