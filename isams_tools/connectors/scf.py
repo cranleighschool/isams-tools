@@ -97,15 +97,13 @@ class SCFConnector():
         return student_list
 
     def add_student(self, student):
-        query = """INSERT INTO scf_web_pupil
-            (first_name, last_name, date_of_birth, gender, form_id, year_id, mis_id, added, created_by_id, updated)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        payload = {'forename': student.forename, 'surname': student.surname, 'form': student.form.sync_value,
+                   'date_of_birth': student.date_of_birth, 'email': student.email, 'sync_value': student.sync_value,
+                   'gender': student.gender, 'status': student.status}
 
-        data = (student.forename, student.surname, student.date_of_birth, student.gender, "1",  "1", student.sync_id,
-                datetime.now().strftime("%Y-%m-%d"), "1", datetime.now().strftime("%Y-%m-%d"))
-
-        self.cursor.execute(query, data)
-        self.connection.commit()
+        r = requests.post("http://staff.cranleigh.ae/scf/api/create_student/1234", data=payload)
+        if r.status_code != 200:
+            logger.critical('Error when adding student: ' + r.text[:500])
 
     def check_student_exists(self, student):
         query = """SELECT * FROM scf_web_pupil"""
