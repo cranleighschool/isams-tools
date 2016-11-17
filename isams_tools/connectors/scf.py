@@ -189,7 +189,7 @@ class SCFConnector():
       headers = {'X-Requested-With': ': XMLHttpRequest-type'}
 
       r = requests.post("http://staff.cranleigh.ae/scf/api/create_teacher/1234", data=payload, headers=headers)
-      if r.status_code != '200':
+      if r.status_code != 200:
           logger.critical('Error when adding teacher: ' + r.text[:500])
     
     def get_teacher_id(self, sync_id):
@@ -207,14 +207,14 @@ class SCFConnector():
         payload = {'forename': teacher.forename, 'surname': teacher.surname, 'title': teacher.title, 'email': teacher.email, 'sync_value': teacher.sync_value, 'status': teacher.status}
 
         r = requests.post("http://staff.cranleigh.ae/scf/api/update_teacher/1234", data=payload)
-        if r.status_code != '200':
+        if r.status_code != 200:
             logger.critical('Error when updating teacher: ' + r.text)
 
     def add_form(self, form):
         payload = {'name': form.name, 'nc_year': form.nc_year, 'teacher_sync_value': form.teacher.sync_value}
 
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_form/1234", data=payload)
-        if r.status_code != '200':
+        if r.status_code != 200:
             logger.critical('Error when adding form: ' + r.text)
 
     def add_department(self, department):
@@ -226,7 +226,7 @@ class SCFConnector():
         payload = {'name': department.name, 'code': department.code, 'head_of_department': hod, 'sync_value': department.sync_value}
 
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_department/1234", data=payload)
-        if r.status_code != '200':
+        if r.status_code != 200:
             logger.critical('Error when adding departments: ' + r.text)
 
     def add_subject(self, subject):
@@ -237,13 +237,12 @@ class SCFConnector():
           payload = {'name': subject.name, 'code': subject.code, 'department': None, 'head_of_subject': '', 'sync_value': subject.sync_value}
 
       r = requests.post("http://staff.cranleigh.ae/scf/api/create_subject/1234", data=payload)
-      if r.status_code != '200':
+      if r.status_code != 200:
           logger.critical('Error when adding subject: ' + r.text)
 
 
     def add_year_group(self, year_group):
         payload = {'name': year_group.name, 'code': year_group.code, 'nc_year': year_group.nc_year}
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_year_group/1234", data=payload)
-        
-        if r.status_code != '200':
+        if r.status_code != 200:
             logger.critical('Error when adding year group: ' + r.text)

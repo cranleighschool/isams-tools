@@ -1,11 +1,14 @@
-iSAMS Tools README
-==================
+iSAMS Tools
+===========
 
-**Register Reminder**
+This software is a group of modules that work with, or provide addition functionality, for iSAMS (http://isams.co.uk). See each module for its documentation.
+
+Register Reminder
+-----------------
 
 Sends emails to tutors who have not registered all students.
 
-**Requirements**: iSAMS (with Batch API key setup, see below), Python 3, python packages from requirements.txt, postfix/sendmail
+**Requirements**: iSAMS; either a database user, or a Batch API key setup; (see below), Python 3; python packages from requirements.txt and postfix/sendmail
 **Recommended**: Linux (but should work with any OS with Python and a command-line scheduler)
 
 1. If you don't have access to iSAMS database (cloud install), you will need to use the API. If you wish to use the database directly, set CONNECTION_METHOD to 'MSSQL' in settings.py and skip to step 5
@@ -16,7 +19,7 @@ Sends emails to tutors who have not registered all students.
 1. Edit `settings_example.py` and rename it to `settings.py`
 1. Add entries to crontab, as shown below (for Windows you will probably need AT: https://support.microsoft.com/en-us/kb/313565)
 
-**iSAMS Batch Method Requirements**
+**iSAMS API Setup**
 
 In your Batch API methods, you need to enable the following:
 
@@ -37,3 +40,17 @@ In your Batch API methods, you need to enable the following:
 # runs the final reminder at 8:45am Monday-Friday
 45 8 * * 1-5 /usr/bin/python3 /path/to/isams-tools/isams_tools.py register_reminder --args 3 >/dev/null 2>&1
 ```
+
+Data Checks
+-----------
+No setup required, but it requires database access, it does not work with the API.
+
+The module has checks for the following common data issues, upon finding any, it emails a specified email in `settings.py`
+* Show duplicate pupil entries in set lists 
+* Show mismatches between timetabled teachers and specified set teachers
+* Show duplicate grade entries in a given report cycle
+* Show pupils in more than one set for the same subject
+
+**Example usage**
+
+`python3 /path/to/isams-tools/isams_tools.py data_checks`

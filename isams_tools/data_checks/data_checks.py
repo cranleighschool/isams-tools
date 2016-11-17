@@ -3,10 +3,9 @@ import logging
 from isams_tools.connectors.isams import iSAMSConnection
 from settings import ISAMS_DATABASE, ISAMS_DATABASE_SERVER, ISAMS_DATABASE_USER, ISAMS_DATABASE_PASS, DATA_CHECK_ENABED, \
     DATA_CHECK_IGNORE_SUBJECTS, DATA_CHECK_FAIL_EMAIL
-from utils.isams_email import ISAMSEmail
+from isams_tools.utils.isams_email import ISAMSEmail
 
-duplicate_pupil_in_sets = {}
-duplicate_pupil_in_sets['query'] = """
+duplicate_pupil_in_sets = {'query': """
 SELECT
 	A.*
 	,B.*
@@ -19,16 +18,14 @@ FROM
 		AND B.TblTeachingManagerSetListsID > A.TblTeachingManagerSetListsID
 	LEFT JOIN iSAMS.dbo.TblTeachingManagerSets S
 		ON S.TblTeachingManagerSetsID=A.intSetID
-"""
-duplicate_pupil_in_sets['email'] = """
+""", 'email': """
 The following students have multiple entries for sets:
 
 {0}
 
-"""
+"""}
 
-teacher_timetable_mismatches = {}
-teacher_timetable_mismatches['query'] = """
+teacher_timetable_mismatches = {'query': """
 	SELECT
 	Sets.txtSetCode
 	,Sets.txtTeacher
@@ -53,17 +50,14 @@ WHERE
 	)
 	AND Sub.txtSubjectName NOT IN %s
 
-"""
-teacher_timetable_mismatches['params'] = DATA_CHECK_IGNORE_SUBJECTS
-teacher_timetable_mismatches['email'] = """
+""", 'params': DATA_CHECK_IGNORE_SUBJECTS, 'email': """
 The following teachers are teaching a lesson but not added as a set teacher:
 
 {0}
 
-"""
+"""}
 
-duplicate_reports = {}
-duplicate_reports['query'] = """
+duplicate_reports = {'query': """
 SELECT
 	*
 FROM (
@@ -96,16 +90,14 @@ FROM (
 	) AS Grades
 WHERE
 	Grades.Report_Order > 1
-"""
-duplicate_reports['email'] = """
+""", 'email': """
 The following students have multiple entries for reports:
 
 {0}
 
-"""
+"""}
 
-pupils_in_two_sets = {}
-pupils_in_two_sets['query'] = """
+pupils_in_two_sets = {'query': """
 SELECT
 	PMP.txtSchoolID AS [iSAMS ID]
 	,PMP.txtFullName AS [Pupil]
@@ -133,14 +125,12 @@ FROM
 WHERE
 	S1.intSubject=S2.intSubject
 	AND txtSubjectName NOT in %s
-"""
-pupils_in_two_sets['email'] = """
+""", 'email': """
 The following students are in two sets for the same subject:
 
 {0}
 
-"""
-pupils_in_two_sets['params'] = DATA_CHECK_IGNORE_SUBJECTS
+""", 'params': DATA_CHECK_IGNORE_SUBJECTS}
 
 checks = [duplicate_reports, duplicate_pupil_in_sets, teacher_timetable_mismatches, pupils_in_two_sets]
 
