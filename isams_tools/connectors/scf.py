@@ -89,7 +89,7 @@ class SCFConnector():
         student_list = []
         for student in students:
             new_student = Student(student['first_name'], student['last_name'], student['username'], student['email'],
-                                  student['year_id'], student['form_id'], student['dob'], student['gender'],
+                                  student['year_id'], student['form_id'], student['date_of_birth'], student['gender'],
                                   student['mis_id'])
 
             student_list.append(new_student)
@@ -97,10 +97,14 @@ class SCFConnector():
         return student_list
 
     def add_student(self, student):
-        payload = {'forename': student.forename, 'surname': student.surname, 'form': student.form.sync_value,
-                   'date_of_birth': student.date_of_birth, 'email': student.email, 'sync_value': student.sync_value,
-                   'gender': student.gender, 'status': student.status}
+        if not student.form:
+            form = None
+        else:
+            form = student.form.name
 
+        payload = {'forename': student.forename, 'surname': student.surname, 'form': form,
+                   'date_of_birth': student.date_of_birth, 'email': student.email, 'sync_value': student.sync_value,
+                   'gender': student.gender, 'status': student.status, 'nc_year': student.nc_year}
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_student/1234", data=payload)
         if r.status_code != 200:
             logger.critical('Error when adding student: ' + r.text[:500])

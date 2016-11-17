@@ -24,10 +24,10 @@ def main():
 
         if 'student' in pair['mappings']:
             logger.info('Syncing students')
-            student_first_run(left_connection, right_connection)
+            #student_first_run(left_connection, right_connection)
             new_student_check(left_connection, right_connection)
-            updated_student_check(left_connection, right_connection)
-            left_student_check(left_connection, right_connection)
+            #updated_student_check(left_connection, right_connection)
+            #left_student_check(left_connection, right_connection)
 
         if 'teacher' in pair['mappings']:
             logger.info('Syncing teachers')

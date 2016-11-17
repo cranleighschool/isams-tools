@@ -79,9 +79,10 @@ class Student():
     form = None
     gender = None
     id = None
+    status = None
 
-    def __init__(self, forename, surname, nc_year, form, username=None, email=None,
-                 date_of_birth=None, gender=None, sync_value=None, id=None):
+    def __init__(self, forename, surname, nc_year, form=None, username=None, email=None,
+                 date_of_birth=None, gender=None, sync_value=None, status=None, id=None):
         self.forename = forename
         self.surname = surname
         self.username = username
@@ -92,6 +93,7 @@ class Student():
         self.gender = gender
         self.sync_value = sync_value
         self.id = id
+        self.status = status
 
     def __str__(self):
         return "(sv:{0}, f:{1}, s:{2}, u:{3}, e:{4}, ay:{5} form:{6})".\
