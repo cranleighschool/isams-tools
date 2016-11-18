@@ -74,12 +74,14 @@ def student_first_run(left, right):
             right.add_student(student)
 
 def new_student_check(left, right):
-    left_all_students = left.get_all_students()
+    students_added = 0
 
-    for student in left_all_students:
+    for student in left.get_all_students():
         if student not in right:
             right.add_student(student)
-            logger.debug("New student added: {0}".format(student))
+            students_added += 1
+            
+    logger.debug("New students added: {0}".format(students_added))
 
 
 def updated_student_check(left, right):
