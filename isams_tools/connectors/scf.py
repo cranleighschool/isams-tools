@@ -72,6 +72,13 @@ class SCFConnector():
                 return True
             else:
                 return False
+        elif type(item) is Setlist:
+            query = "SELECT id from scf_web_setlist WHERE sync_value = %s"
+            self.cursor.execute(query, (item.sync_value,))
+            if self.cursor.fetchone():
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -264,3 +271,14 @@ class SCFConnector():
 
         if r.status_code != 200:
             logger.critical('Error when set: ' + r.text)
+
+
+    def add_setlist(self, setlist):
+        payload = {'student': setlist.student.sync_value, 'set': setlist.set.sync_value,
+                   'submitted_by': setlist.submitted_by, 'submitted_date': setlist.submitted_date}
+
+        r = requests.post("http://staff.cranleigh.ae/scf/api/create_setlist/1234", data=payload)
+
+        if r.status_code != 200:
+            logger.critical('Error when set: ' + r.text)
+

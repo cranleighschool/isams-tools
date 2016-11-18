@@ -51,6 +51,10 @@ def main():
             logger.info("Syncing sets")
             new_set_check(left_connection, right_connection)
 
+        if 'setlist' in pair['mappings']:
+            logger.info("Syncing setlists")
+            new_setlist_check(left_connection, right_connection)
+
 def get_connection(pair):
     connection = None
 
@@ -182,3 +186,13 @@ def new_set_check(left, right):
             sets_added += 1
 
     logger.info("Added {0} new sets".format(str(sets_added)))
+
+def new_setlist_check(left, right):
+    setlists_added = 0
+
+    for setlist in left.get_all_setlists():
+        if setlist not in right:
+            right.add_setlist(setlist)
+            setlists_added += 1
+
+    logger.info("Added {0} new setlists".format(str(setlists_added)))
