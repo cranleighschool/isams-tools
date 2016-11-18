@@ -125,16 +125,16 @@ class YearGroup():
         self.head_of_year = head_of_year
 
 class Set():
-    code = None
+    name = None
     teacher = None
     nc_year = None
     sync_value = None
     subject = None
 
-    def __init__(self, code, teacher=None, nc_year=None, subject=None, sync_value=None):
-        self.code = code
+    def __init__(self, name, teacher=None, nc_year=None, subject=None, sync_value=None):
+        self.name = name
         self.teacher = teacher
-        self.nc_year = year_group
+        self.nc_year = nc_year
         self.subject = subject
         self.sync_value = sync_value
 
@@ -143,7 +143,8 @@ class SetList():
     sync_value = None
     set = None
     student = None
-    added_b
+    added_by = None
+    added_date = None
 
 class Department():
     name = None
