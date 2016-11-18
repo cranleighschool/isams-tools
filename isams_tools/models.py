@@ -139,12 +139,20 @@ class Set():
         self.sync_value = sync_value
 
 
-class SetList():
+class Setlist():
     sync_value = None
     set = None
     student = None
-    added_by = None
-    added_date = None
+    submitted_by = None
+    submitted_date = None
+
+    def __init__(self, set, student, submitted_by=None, submitted_date=None, sync_value=None):
+        self.set = set
+        self.student = student
+        self.submitted_by = submitted_by
+        self.submitted_date submitted_date
+        self.sync_value = sync_value
+
 
 class Department():
     name = None
