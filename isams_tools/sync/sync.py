@@ -165,3 +165,13 @@ def new_year_group_check(left, right):
             year_groups_added += 1
 
     logger.info("Added {0} new year groups".format(str(year_groups_added)))
+
+def new_set_check(left, right, object):
+    sets_added = 0
+
+    for set in left.get_all_sets():
+        if set not in right:
+            right.add_set(year_group)
+            sets_added += 1
+
+    logger.info("Added {0} new sets".format(str(sets_added)))
