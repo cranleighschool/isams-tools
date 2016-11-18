@@ -45,6 +45,9 @@ def main():
             logger.info("Syncing forms")
             new_form_check(left_connection, right_connection)
 
+        if 'set' in pair['mappings']:
+            logger.info("Syncing sets")
+            new_set_check(left_connection, right_connection)
 
 def get_connection(pair):
     connection = None
