@@ -139,7 +139,7 @@ class Set():
         self.sync_value = sync_value
 
 
-class Setlist():
+class SetList():
     sync_value = None
     set = None
     student = None
@@ -150,7 +150,7 @@ class Setlist():
         self.set = set
         self.student = student
         self.submitted_by = submitted_by
-        self.submitted_date submitted_date
+        self.submitted_date = submitted_date
         self.sync_value = sync_value
 
 

@@ -4,7 +4,7 @@ import requests
 
 import logging
 from datetime import datetime
-from isams_tools.models import Form, Student, Teacher, Department, Set, Subject, YearGroup
+from isams_tools.models import Form, Student, Teacher, Department, Set, SetList, Subject, YearGroup
 from settings import SCF
 
 
@@ -72,7 +72,7 @@ class SCFConnector():
                 return True
             else:
                 return False
-        elif type(item) is Setlist:
+        elif type(item) is SetList:
             query = "SELECT id from scf_web_setlist WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
@@ -274,9 +274,11 @@ class SCFConnector():
 
 
     def add_setlist(self, setlist):
-        payload = {'student': setlist.student.sync_value, 'set': setlist.set.sync_value,
+        try:
+            payload = {'student': setlist.student.sync_value, 'set': setlist.set.sync_value, 'sync_value': setlist.sync_value,
                    'submitted_by': setlist.submitted_by, 'submitted_date': setlist.submitted_date}
-
+        except AttributeError:
+            logger.critical("Couldn't add set list with payload: {0}".format(payload))
         r = requests.post("http://staff.cranleigh.ae/scf/api/create_setlist/1234", data=payload)
 
         if r.status_code != 200:
