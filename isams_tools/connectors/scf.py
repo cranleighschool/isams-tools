@@ -110,40 +110,9 @@ class SCFConnector():
 
         return student_list
 
-    def add_student(self, student):
-        if not student.form:
-            form = None
-        else:
-            form = student.form.name
+    def get_student(self, sync_value):
+        print(api_call('student', 'get', {}))
 
-        payload = {'forename': student.forename, 'surname': student.surname, 'form': form,
-                   'date_of_birth': student.date_of_birth, 'email': student.email, 'sync_value': student.sync_value,
-                   'gender': student.gender, 'status': student.status, 'nc_year': student.nc_year}
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_student/1234", data=payload)
-        if r.status_code != 200:
-            logger.critical('Error when adding student: ' + r.text[:500])
-
-    def check_student_exists(self, student):
-        query = """SELECT * FROM scf_web_pupil"""
-
-
-    def exact_student_exists(self, student):
-        query = """SELECT * FROM scf_web_pupil
-                   WHERE first_name = %s
-                   AND last_name = %s
-                   AND date_of_birth = %s
-                   AND username = %s
-                   AND email = %s
-                   AND form_id = %s
-                   AND year_id = %s
-                   AND mis_id = %s"""
-        # TODO: need to get form and year details from DB here
-        data = (student.forename, student.surname, student.date_of_birth, student.username, student.email, 1, 1, student.sync_id)
-
-        self.cursor.execute(query, data)
-        student = self.cursor.fetchone()
-
-        return student
 
     def update_student(self, student):
         query = """UPDATE "scf_web_pupil"
@@ -202,11 +171,8 @@ class SCFConnector():
 
     def add_teacher(self, teacher):
       payload = {'forename': teacher.forename, 'surname': teacher.surname, 'title': teacher.title, 'email': teacher.email, 'sync_value': teacher.sync_value, 'status': teacher.status}
-      headers = {'X-Requested-With': ': XMLHttpRequest-type'}
+      api_call('teacher', 'create', payload)
 
-      r = requests.post("http://staff.cranleigh.ae/scf/api/create_teacher/1234", data=payload, headers=headers)
-      if r.status_code != 200:
-          logger.critical('Error when adding teacher: ' + r.text[:500])
     
     def get_teacher_id(self, sync_id):
         teacher = None
@@ -221,17 +187,11 @@ class SCFConnector():
 
     def update_teacher(self, teacher):
         payload = {'forename': teacher.forename, 'surname': teacher.surname, 'title': teacher.title, 'email': teacher.email, 'sync_value': teacher.sync_value, 'status': teacher.status}
-
-        r = requests.post("http://staff.cranleigh.ae/scf/api/update_teacher/1234", data=payload)
-        if r.status_code != 200:
-            logger.critical('Error when updating teacher: ' + r.text)
+        api_call('teacher', 'update', payload)
 
     def add_form(self, form):
         payload = {'name': form.name, 'nc_year': form.nc_year, 'teacher_sync_value': form.teacher.sync_value}
-
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_form/1234", data=payload)
-        if r.status_code != 200:
-            logger.critical('Error when adding form: ' + r.text)
+        api_call('form', 'create', payload)
 
     def add_department(self, department):
         if department.head_of_department:
@@ -240,10 +200,7 @@ class SCFConnector():
             hod = None
 
         payload = {'name': department.name, 'code': department.code, 'head_of_department': hod, 'sync_value': department.sync_value}
-
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_department/1234", data=payload)
-        if r.status_code != 200:
-            logger.critical('Error when adding departments: ' + r.text)
+        api_call('department', 'create', payload)
 
     def add_subject(self, subject):
       # FIXME HoS
@@ -251,26 +208,18 @@ class SCFConnector():
           payload = {'name': subject.name, 'code': subject.code, 'department': subject.department.sync_value or None, 'head_of_subject': '', 'sync_value': subject.sync_value}
       except AttributeError:
           payload = {'name': subject.name, 'code': subject.code, 'department': None, 'head_of_subject': '', 'sync_value': subject.sync_value}
-
-      r = requests.post("http://staff.cranleigh.ae/scf/api/create_subject/1234", data=payload)
-      if r.status_code != 200:
-          logger.critical('Error when adding subject: ' + r.text)
+          api_call('subject', 'create', payload)
 
 
     def add_year_group(self, year_group):
         payload = {'name': year_group.name, 'code': year_group.code, 'nc_year': year_group.nc_year}
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_year_group/1234", data=payload)
-        if r.status_code != 200:
-            logger.critical('Error when adding year group: ' + r.text)
+        api_call('setlist', 'create', payload)
 
 
     def add_set(self, set):
         payload = {'name': set.name, 'nc_year': set.nc_year, 'subject': set.subject, 'teacher': set.teacher.sync_value,
                    'sync_value': set.sync_value}
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_set/1234", data=payload)
-
-        if r.status_code != 200:
-            logger.critical('Error when set: ' + r.text)
+        api_call('set', 'create', payload)
 
 
     def add_setlist(self, setlist):
@@ -279,8 +228,12 @@ class SCFConnector():
                    'submitted_by': setlist.submitted_by, 'submitted_date': setlist.submitted_date}
         except AttributeError:
             logger.critical("Couldn't add set list with payload: {0}".format(payload))
-        r = requests.post("http://staff.cranleigh.ae/scf/api/create_setlist/1234", data=payload)
 
-        if r.status_code != 200:
-            logger.critical('Error when set: ' + r.text)
+        api_call('setlist', 'create', payload)
 
+
+def api_call(object_name, action, payload):
+    r = requests.post("http://staff.cranleigh.ae/scf/api/" + action + "_" + object_name + "/1234", data=payload)
+
+    if r.status_code != 200:
+        logger.critical('Error when adding {0}: '.format(object_name) + r.text)
