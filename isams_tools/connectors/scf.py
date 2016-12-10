@@ -11,7 +11,7 @@ from settings import SCF
 logger = logging.getLogger('root')
 
 class SCFConnector():
-    STUDENT_TABLE = 'scf_web_pupil'
+    STUDENT_TABLE = 'scf_student'
 
     host = None
     user = None
@@ -24,7 +24,7 @@ class SCFConnector():
     # define our own contains so we can check "if student in scf_connection"
     def __contains__(self, item):
         if type(item) is Student:
-            query = "SELECT id FROM scf_web_pupil WHERE sync_value = %s"
+            query = "SELECT id FROM scf_student WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
@@ -98,7 +98,7 @@ class SCFConnector():
         self.cursor = self.connection.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
     def get_all_students(self):
-        self.cursor.execute("SELECT * FROM scf_web_pupil")
+        self.cursor.execute("SELECT * FROM scf_student")
         students = self.cursor.fetchall()
         student_list = []
         for student in students:
@@ -151,7 +151,7 @@ class SCFConnector():
         return self.cursor.execute(query, params)
 
     def update_student(self, student):
-        query = """UPDATE "scf_web_pupil"
+        query = """UPDATE "scf_student"
                           SET first_name = %s
                           , last_name = %s
                           , date_of_birth = %s
