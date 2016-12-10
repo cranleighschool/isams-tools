@@ -135,18 +135,46 @@ class SCFConnector():
 
         year_group_id = self.get_year_group_id(student.nc_year)
 
-        query = """SELECT * FROM "scf_student"
-                                  WHERE first_name = %s
-                                  AND last_name = %s
-                                  AND date_of_birth = %s
-                                  AND username = %s
-                                  AND email = %s
-                                  AND form_id = %s
-                                  AND year_id = %s
-                                  AND status = %s
-                                  WHERE sync_value = %s"""
-        params = (student.forename, student.surname, student.date_of_birth, student.username, student.email,
-                  student.form.sync_value, year_group_id, at_school, student.sync_value)
+        params = (student.forename, student.surname)
+
+        query = 'SELECT * FROM "scf_student'
+        query += 'WHERE first_name = %s'
+        query += 'AND last_name = %s'
+
+        if student.date_of_birth:
+            query += 'AND date_of_birth = %s'
+            params.append(student.date_of_birth)
+        else:
+            query += 'AND date_of_birth IS NULL'
+
+        if student.username:
+            query += 'AND username = %s'
+            params.append(student.username)
+        else:
+            query += 'AND username IS NULL'
+
+        if student.email:
+            query += 'AND email = %s'
+            params.append(student.email)
+        else:
+            query += 'AND email IS NULL'
+
+        if student.form.sync_value
+            query += 'AND form_id = %s'
+            params.append(student.form.sync_value)
+        else:
+            query += 'AND form_id = %s'
+
+        if year_group_id:
+            query += 'AND year_id = %s'
+            params.append(year_group_id)
+        else:
+            query += 'AND year_id IS NULL'
+
+        query += 'AND status = %s'
+        query += 'WHERE sync_value = %s'
+
+        params.append(at_school, student.sync_value)
 
         return self.cursor.execute(query, params)
 
