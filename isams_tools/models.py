@@ -21,7 +21,7 @@ class Teacher():
 
 
     def __str__(self):
-        return("forename={0}, surname={1}, title={2}, email={3}, sync_value={4}, status={5}".format(self.forename, self.surname, self.title, self.email, self.sync_value, self.status))
+        return("forename={0}, surname={1}, title={2}, email={3}, sync_value={4}, status={5}".format(self.forename.encode('utf-8'), self.surname.encode('utf-8'), self.title, self.email.encode('utf-8'), self.sync_value, self.status))
 
     def __eq__(self, other):
         equal = True

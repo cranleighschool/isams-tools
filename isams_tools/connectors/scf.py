@@ -124,8 +124,22 @@ class SCFConnector():
             row = results[0]
             year_group_id = row['id']
         else:
-            logger.warning("No year group found for for " + nc_year)
+            logger.warning("No year group found for for " + str(nc_year))
         return year_group_id
+
+    def get_form_id(self, form_name):
+        query = 'SELECT id FROM "scf_form" WHERE name = %s'
+        form_id = None
+    
+        self.cursor.execute(query, (form_name,))
+        results = self.cursor.fetchall()
+        if results:
+            row = results[0]
+            form_id = row['id']
+        else:
+            logger.warning("No form found with name " + str(form_name))
+
+        return form_id
 
     def exact_student_exists(self, student):
         at_school = True
@@ -134,6 +148,7 @@ class SCFConnector():
             at_school = False
 
         year_group_id = self.get_year_group_id(student.nc_year)
+        form_id = self.get_form_id(student.form)
 
         query = """SELECT * FROM "scf_student"
                                   WHERE first_name = %s
@@ -143,10 +158,10 @@ class SCFConnector():
                                   AND email = %s
                                   AND form_id = %s
                                   AND year_id = %s
-                                  AND status = %s
-                                  WHERE sync_value = %s"""
+                                  AND at_school = %s
+                                  AND sync_value = %s"""
         params = (student.forename, student.surname, student.date_of_birth, student.username, student.email,
-                  student.form.sync_value, year_group_id, at_school, student.sync_value)
+                  form_id, year_group_id, at_school, student.sync_value)
 
         return self.cursor.execute(query, params)
 
@@ -159,7 +174,7 @@ class SCFConnector():
                           , email = %s
                           , form_id = %s
                           , year_id = %s
-                          , status = %s
+                          , at_school = %s
                           WHERE sync_value = %s"""
 
         at_school = True
@@ -168,9 +183,10 @@ class SCFConnector():
             at_school = False
 
         year_group_id = self.get_year_group_id(student.nc_year)
+        form_id = self.get_form_id(student.form)
 
         params = (student.forename, student.surname, student.date_of_birth, student.username, student.email,
-                  student.form.sync_value, year_group_id, at_school, student.sync_value)
+                  form_id, year_group_id, at_school, student.sync_value)
 
         self.cursor.execute(query, params)
         self.connection.commit()

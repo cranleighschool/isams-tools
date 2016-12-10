@@ -25,8 +25,8 @@ def main():
         if 'student' in pair['mappings']:
             logger.info('Syncing students')
             #student_first_run(left_connection, right_connection)
-            new_student_check(left_connection, right_connection)
-            #updated_student_check(left_connection, right_connection)
+            #new_student_check(left_connection, right_connection)
+            updated_student_check(left_connection, right_connection)
             #left_student_check(left_connection, right_connection)
 
         if 'teacher' in pair['mappings']:
@@ -94,13 +94,15 @@ def new_student_check(left, right):
 def updated_student_check(left, right):
     left_all_students = left.get_all_students()
 
-    # FIXME iSAMS API has key -> value for iSAMS, need to make it consistent
     for student in left_all_students:
         in_right = student in right
         exact_match = right.exact_student_exists(student)
 
         if in_right and not exact_match:
-            logger.debug("Student changed, updating {0}".format(student))
+            try:
+                print("Student changed, updating {0}".format(student))
+            except UnicodeEncodeError:  # can throw errors when printing to terminals, only needed for debugging
+                pass
             right.update_student(student)
 
 def left_student_check(left, right):
