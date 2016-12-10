@@ -110,9 +110,45 @@ class SCFConnector():
 
         return student_list
 
-    def get_student(self, sync_value):
-        print(api_call('student', 'get', {}))
+    # def get_student(self, sync_value):
+    #     print(api_call('student', 'get', {}))
 
+    def get_year_group_id(self, nc_year):
+        query = 'SELECT id FROM "scf_yeargroup" WHERE nc_year = %s'
+
+        year_group_id = None
+        self.cursor.execute(query, (nc_year,))
+
+        results = self.cursor.fetchall()
+        if results:
+            row = results[0]
+            year_group_id = row['id']
+        else:
+            logger.warning("No year group found for for " + nc_year)
+        return year_group_id
+
+    def exact_student_exists(self, student):
+        at_school = True
+
+        if student.status != 1:
+            at_school = False
+
+        year_group_id = self.get_year_group_id(student.nc_year)
+
+        query = """SELECT * FROM "scf_student"
+                                  WHERE first_name = %s
+                                  AND last_name = %s
+                                  AND date_of_birth = %s
+                                  AND username = %s
+                                  AND email = %s
+                                  AND form_id = %s
+                                  AND year_id = %s
+                                  AND status = %s
+                                  WHERE sync_value = %s"""
+        params = (student.forename, student.surname, student.date_of_birth, student.username, student.email,
+                  student.form.sync_value, year_group_id, at_school, student.sync_value)
+
+        return self.cursor.execute(query, params)
 
     def update_student(self, student):
         query = """UPDATE "scf_web_pupil"
@@ -123,12 +159,20 @@ class SCFConnector():
                           , email = %s
                           , form_id = %s
                           , year_id = %s
-                          WHERE mis_id = %s"""
-        # TODO: need to get form and year details from DB here
-        data = (student.forename, student.surname, student.date_of_birth, student.username, student.email, 1, 1,
-                student.sync_id)
+                          , status = %s
+                          WHERE sync_value = %s"""
 
-        self.cursor.execute(query, data)
+        at_school = True
+
+        if student.status != 1:
+            at_school = False
+
+        year_group_id = self.get_year_group_id(student.nc_year)
+
+        params = (student.forename, student.surname, student.date_of_birth, student.username, student.email,
+                  student.form.sync_value, year_group_id, at_school, student.sync_value)
+
+        self.cursor.execute(query, params)
         self.connection.commit()
 
     def get_all_teachers(self):
