@@ -149,49 +149,50 @@ class SCFConnector():
 
         year_group_id = self.get_year_group_id(student.nc_year)
         form_id = self.get_form_id(student.form)
+        params = [student.forename, student.surname]
 
-        params = (student.forename, student.surname)
-
-        query = 'SELECT * FROM "scf_student'
-        query += 'WHERE first_name = %s'
-        query += 'AND last_name = %s'
+        query = 'SELECT * FROM "scf_student" '
+        query += 'WHERE first_name = %s '
+        query += 'AND last_name = %s '
 
         if student.date_of_birth:
-            query += 'AND date_of_birth = %s'
+            query += 'AND date_of_birth = %s '
             params.append(student.date_of_birth)
         else:
-            query += 'AND date_of_birth IS NULL'
+            query += 'AND date_of_birth IS NULL '
 
         if student.username:
-            query += 'AND username = %s'
+            query += 'AND username = %s '
             params.append(student.username)
         else:
-            query += 'AND username IS NULL'
+            query += 'AND username IS NULL '
 
         if student.email:
-            query += 'AND email = %s'
+            query += 'AND email = %s '
             params.append(student.email)
         else:
-            query += 'AND email IS NULL'
+            query += 'AND email IS NULL '
 
-        if student.form.sync_value
-            query += 'AND form_id = %s'
-            params.append(student.form.sync_value)
+        if form_id:
+            query += 'AND form_id = %s '
+            params.append(form_id)
         else:
-            query += 'AND form_id = %s'
+            query += 'AND form_id IS NULL '
 
         if year_group_id:
-            query += 'AND year_id = %s'
+            query += 'AND year_id = %s '
             params.append(year_group_id)
         else:
-            query += 'AND year_id IS NULL'
+            query += 'AND year_id IS NULL '
 
-        query += 'AND status = %s'
-        query += 'WHERE sync_value = %s'
+        query += 'AND at_school = %s '
+        query += 'AND sync_value = %s '
 
-        params.append(at_school, student.sync_value)
-
-        return self.cursor.execute(query, params)
+        params.append(at_school)
+        params.append(student.sync_value)
+        
+        self.cursor.execute(query, tuple(params))
+        return self.cursor.fetchone() is not None
 
     def update_student(self, student):
         query = """UPDATE "scf_student"
