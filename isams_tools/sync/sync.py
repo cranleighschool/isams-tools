@@ -62,7 +62,7 @@ def main():
         if 'setlist' in pair['mappings']:
             logger.info("Syncing setlists")
             new_setlists(left_connection, right_connection)
-            removed_setlist_check(left_connection, right_connection)
+            removed_setlists(left_connection, right_connection)
 
 def get_connection(pair):
     connection = None
@@ -211,7 +211,7 @@ def new_setlists(left, right):
 def removed_setlists(left, right):
     setlists_removed = 0
 
-    for setlist in right.get_setlists_sync_value():
-        if not left.get_setlist_from_id():
-            right.remove_setlist(setlist)
+    for setlist_sync_value in right.get_setlists_sync_value():
+        if not left.get_setlist_from_sync_value(setlist_sync_value):
+            right.remove_setlist(setlist_sync_value)
             setlists_removed += 1

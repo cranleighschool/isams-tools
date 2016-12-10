@@ -30,49 +30,49 @@ class SCFConnector():
             else:
                 return False
         elif type(item) is Teacher:
-            query = "SELECT id FROM scf_web_staff WHERE sync_value = %s"
+            query = "SELECT id FROM scf_staff WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
             else:
                 return False
         elif type(item) is Form:
-          query = "SELECT id from scf_web_form WHERE name = %s"
+          query = "SELECT id from scf_form WHERE name = %s"
           self.cursor.execute(query, (item.name,))
           if self.cursor.fetchone():
               return True
           else:
             return False
         elif type(item) is Department:
-            query = "SELECT id from scf_web_department WHERE sync_value = %s"
+            query = "SELECT id from scf_department WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
             else:
               return False
         elif type(item) is Subject:
-            query = "SELECT id from scf_web_subject WHERE sync_value = %s"
+            query = "SELECT id from scf_subject WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
             else:
               return False
         elif type(item) is YearGroup:
-            query = "SELECT id from scf_web_yeargroup WHERE nc_year = %s"
+            query = "SELECT id from scf_yeargroup WHERE nc_year = %s"
             self.cursor.execute(query, (item.nc_year,))
             if self.cursor.fetchone():
                 return True
             else:
                 return False
         elif type(item) is Set:
-            query = "SELECT id from scf_web_set WHERE sync_value = %s"
+            query = "SELECT id from scf_set WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
             else:
                 return False
         elif type(item) is SetList:
-            query = "SELECT id from scf_web_setlist WHERE sync_value = %s"
+            query = "SELECT id from scf_setlist WHERE sync_value = %s"
             self.cursor.execute(query, (item.sync_value,))
             if self.cursor.fetchone():
                 return True
@@ -233,7 +233,7 @@ class SCFConnector():
         self.connection.commit()
 
     def get_all_teachers(self):
-        self.cursor.execute("SELECT * FROM scf_web_staff, auth_user WHERE scf_web_staff.user_id=auth_user.id")
+        self.cursor.execute("SELECT * FROM scf_staff, auth_user WHERE scf_staff.user_id=auth_user.id")
         teachers = self.cursor.fetchall()
         teacher_list = []
         for teacher in teachers:
@@ -254,7 +254,7 @@ class SCFConnector():
         	,u.email
         	,s.sync_value
         	,u.is_active
-            FROM scf_web_staff as s, auth_user as u
+            FROM scf_staff as s, auth_user as u
             WHERE s.sync_value=%s
             AND u.id=s.user_id
             """
@@ -278,7 +278,7 @@ class SCFConnector():
     def get_teacher_id(self, sync_id):
         teacher = None
         query = """SELECT user_id 
-                   FROM scf_web_staff
+                   FROM scf_staff
                    WHERE sync_value='%s'
                 """
         self.cursor.execute(query % sync_id)
@@ -322,15 +322,6 @@ class SCFConnector():
                    'sync_value': set.sync_value}
         api_call('set', 'create', payload)
 
-    def get_set_from_id(self, id):
-        self.cursor.execute("SELECT * FROM scf_set WHERE id = %s")
-        result = self.cursor.fetchone()
-        set = None
-
-        if set:
-            student = Student(set.)
-
-        return student
 
     def add_setlist(self, setlist):
         try:
@@ -342,15 +333,17 @@ class SCFConnector():
         api_call('setlist', 'create', payload)
 
     def get_setlists_sync_value(self):
-        query = 'SELECT sync_value "scf_web_setlist"'
+        query = 'SELECT sync_value FROM "scf_setlist"'
         self.cursor.execute(query)
-
-        for setlist in self.cursor.fetchall():
-            yield setlist.id
+        results = self.cursor.fetchall()
+        
+        for setlist in results:
+            yield setlist.sync_value
 
     def remove_setlist(self, sync_value):
-        print("About to delete setlist with id: " + str(sync_value))
-
+        # todo, log student and set details
+        query = 'DELETE FROM "scf_setlist" WHERE sync_value = %s'
+        self.cursor.execute(query, (sync_value,))
 
 def api_call(object_name, action, payload):
     r = requests.post("http://staff.cranleigh.ae/scf/api/" + action + "_" + object_name + "/1234", data=payload)
