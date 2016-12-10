@@ -22,38 +22,47 @@ def main():
         right_connection = get_connection(right_sync)
         right_connection.connect()
 
+        # students don't get removed
         if 'student' in pair['mappings']:
             logger.info('Syncing students')
-            #student_first_run(left_connection, right_connection)
-            #new_student_check(left_connection, right_connection)
-            updated_student_check(left_connection, right_connection)
-            #left_student_check(left_connection, right_connection)
+            new_students(left_connection, right_connection)
+            updated_students(left_connection, right_connection)
 
+        # teachers don't get removed
         if 'teacher' in pair['mappings']:
             logger.info('Syncing teachers')
-            new_teacher_check(left_connection, right_connection)
-            updated_teacher_check(left_connection, right_connection)
+            new_teachers(left_connection, right_connection)
+            updated_teachers(left_connection, right_connection)
 
         if 'subject' in pair['mappings']:
             logger.info('Syncing subjects')
-            new_department_check(left_connection, right_connection)
-            new_subject_check(left_connection, right_connection)
+            new_departments(left_connection, right_connection)
+            # todo: updated_department_check(left_connection, right_connection)
+            # todo: removed_department_check(left_connection, right_connection)
+            new_subjects(left_connection, right_connection)
 
+        # year groups don't get removed
         if 'year_group' in pair['mappings']:
             logger.info('Syncing year groups')
             new_year_group_check(left_connection, right_connection)
+            # todo: updated_year_group_check(left_connection, right_connection)
 
         if 'form' in pair['mappings']:
             logger.info("Syncing forms")
-            new_form_check(left_connection, right_connection)
+            new_forms(left_connection, right_connection)
+            # todo: updated_form_check(left_connection, right_connection)
+            # todo: removed_form_check(left_connection, right_connection)
 
         if 'set' in pair['mappings']:
             logger.info("Syncing sets")
-            new_set_check(left_connection, right_connection)
+            new_sets(left_connection, right_connection)
+            # todo: updated_set_check(left_connection, right_connection)
+            # todo: removed_set_check(left_connection, right_connection)
 
         if 'setlist' in pair['mappings']:
             logger.info("Syncing setlists")
-            new_setlist_check(left_connection, right_connection)
+            new_setlists(left_connection, right_connection)
+            removed_setlist_check(left_connection, right_connection)
 
 def get_connection(pair):
     connection = None
@@ -80,7 +89,7 @@ def student_first_run(left, right):
         for student in left_all_students:
             right.add_student(student)
 
-def new_student_check(left, right):
+def new_students(left, right):
     students_added = 0
 
     for student in left.get_all_students():
@@ -91,7 +100,7 @@ def new_student_check(left, right):
     logger.debug("New students added: {0}".format(students_added))
 
 
-def updated_student_check(left, right):
+def updated_students(left, right):
     left_all_students = left.get_all_students()
 
     for student in left_all_students:
@@ -113,7 +122,7 @@ def left_student_check(left, right):
             print("do_leavers_procedure(): {0}".format(student))
 
 
-def new_teacher_check(left, right):
+def new_teachers(left, right):
     teachers_added = 0
 
     for teacher in left.get_all_teachers():
@@ -123,7 +132,7 @@ def new_teacher_check(left, right):
 
     logger.info("Added {0} new teachers".format(str(teachers_added)))
 
-def updated_teacher_check(left, right):
+def updated_teachers(left, right):
     for teacher in left.get_all_teachers():
         right_teacher = right.get_teacher(teacher.sync_value)
 
@@ -134,7 +143,7 @@ def updated_teacher_check(left, right):
         except AttributeError:
             logger.warning("Problem updating teacher: {0}".format(teacher))
 
-def new_form_check(left, right):
+def new_forms(left, right):
     forms_added = 0
 
     for form in left.get_all_forms():
@@ -146,7 +155,7 @@ def new_form_check(left, right):
     logger.info("Added {0} new forms".format(str(forms_added)))
 
 
-def new_department_check(left, right):
+def new_departments(left, right):
     departments_added = 0
 
     for department in left.get_all_departments():
@@ -157,7 +166,7 @@ def new_department_check(left, right):
 
     logger.info("Added {0} new departments".format(str(departments_added)))
 
-def new_subject_check(left, right):
+def new_subjects(left, right):
     subjects_added = 0
 
     for subject in left.get_all_subjects():
@@ -179,7 +188,7 @@ def new_year_group_check(left, right):
 
     logger.info("Added {0} new year groups".format(str(year_groups_added)))
 
-def new_set_check(left, right):
+def new_sets(left, right):
     sets_added = 0
 
     for set in left.get_all_sets():
@@ -189,7 +198,7 @@ def new_set_check(left, right):
 
     logger.info("Added {0} new sets".format(str(sets_added)))
 
-def new_setlist_check(left, right):
+def new_setlists(left, right):
     setlists_added = 0
 
     for setlist in left.get_all_setlists():
@@ -198,3 +207,11 @@ def new_setlist_check(left, right):
             setlists_added += 1
 
     logger.info("Added {0} new setlists".format(str(setlists_added)))
+
+def removed_setlists(left, right):
+    setlists_removed = 0
+
+    for setlist in right.get_setlists_sync_value():
+        if not left.get_setlist_from_id():
+            right.remove_setlist(setlist)
+            setlists_removed += 1
