@@ -1,12 +1,11 @@
+import logging
 import psycopg2
 import psycopg2.extras
 import requests
-
-import logging
 from datetime import datetime
+
 from isams_tools.models import Form, Student, Teacher, Department, Set, SetList, Subject, YearGroup
 from settings import SCF
-
 
 logger = logging.getLogger('root')
 
@@ -95,16 +94,16 @@ class SCFConnector():
         logger.debug("Conncting to Postgres DB with string: {0}".format(conn_string))
         self.connection = psycopg2.connect(conn_string)
 
-        self.cursor = self.connection.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+        self.cursor = self.connection.cursor(cursor_factory = psycopg2.extras.NamedTupleCursor)
 
     def get_all_students(self):
         self.cursor.execute("SELECT * FROM scf_student")
         students = self.cursor.fetchall()
         student_list = []
         for student in students:
-            new_student = Student(student['first_name'], student['last_name'], student['username'], student['email'],
-                                  student['year_id'], student['form_id'], student['date_of_birth'], student['gender'],
-                                  student['mis_id'])
+            new_student = Student(student.first_name, student.last_name, student.username, student.email,
+                                  student.year_id, student.form_id, student.date_of_birth, student.gender,
+                                  student.sync_value)
 
             student_list.append(new_student)
 
@@ -112,6 +111,19 @@ class SCFConnector():
 
     # def get_student(self, sync_value):
     #     print(api_call('student', 'get', {}))
+
+    def get_student_from_id(self, id):
+        self.cursor.execute("SELECT * FROM scf_students WHERE id = %s")
+        result = self.cursor.fetchone()
+        student = None
+
+        if result:
+            student = Student(student.first_name, student.last_name, student.username, student.email,
+                    student.year_id, student.form_id, student.date_of_birth, student.gender,
+                    student.sync_value)
+
+        return student
+
 
     def get_year_group_id(self, nc_year):
         query = 'SELECT id FROM "scf_yeargroup" WHERE nc_year = %s'
@@ -122,7 +134,7 @@ class SCFConnector():
         results = self.cursor.fetchall()
         if results:
             row = results[0]
-            year_group_id = row['id']
+            year_group_id = row.id
         else:
             logger.warning("No year group found for for " + str(nc_year))
         return year_group_id
@@ -135,7 +147,7 @@ class SCFConnector():
         results = self.cursor.fetchall()
         if results:
             row = results[0]
-            form_id = row['id']
+            form_id = row.id
         else:
             logger.warning("No form found with name " + str(form_name))
 
@@ -225,11 +237,11 @@ class SCFConnector():
         teachers = self.cursor.fetchall()
         teacher_list = []
         for teacher in teachers:
-          if teacher['is_active'] == 'true':
+          if teacher.is_active == 'true':
               status = 1
           else:
               status = -1
-              new_teacher = Teacher(teacher['forename'], teacher['surname'], teacher['title'], teacher['email'], teacher['school_id'], status)
+              new_teacher = Teacher(teacher.forename, teacher.surname, teacher.title, teacher.email, teacher.school_id, status)
               teacher_list.append(new_teacher)
 
         return teacher_list
@@ -252,7 +264,7 @@ class SCFConnector():
         if results:
             # have to use fetchall to get it as a dict
             row = results[0]
-            teacher = Teacher(row['first_name'], row['last_name'], row['title'], row['email'], row['sync_value'], row['is_active'])
+            teacher = Teacher(row.first_name, row.last_name, row.title, row.email, row.sync_value, row.is_active)
         else:
             logger.warning("No results for " + sync_value)
         return teacher
@@ -269,9 +281,9 @@ class SCFConnector():
                    FROM scf_web_staff
                    WHERE sync_value='%s'
                 """
-        self.cursor.execute(query % user_code)
+        self.cursor.execute(query % sync_id)
         row = self.cursor.fetchone()
-        return row['id']
+        return row.id
     
 
     def update_teacher(self, teacher):
@@ -310,6 +322,15 @@ class SCFConnector():
                    'sync_value': set.sync_value}
         api_call('set', 'create', payload)
 
+    def get_set_from_id(self, id):
+        self.cursor.execute("SELECT * FROM scf_set WHERE id = %s")
+        result = self.cursor.fetchone()
+        set = None
+
+        if set:
+            student = Student(set.)
+
+        return student
 
     def add_setlist(self, setlist):
         try:
@@ -319,6 +340,16 @@ class SCFConnector():
             logger.critical("Couldn't add set list with payload: {0}".format(payload))
 
         api_call('setlist', 'create', payload)
+
+    def get_setlists_sync_value(self):
+        query = 'SELECT sync_value "scf_web_setlist"'
+        self.cursor.execute(query)
+
+        for setlist in self.cursor.fetchall():
+            yield setlist.id
+
+    def remove_setlist(self, sync_value):
+        print("About to delete setlist with id: " + str(sync_value))
 
 
 def api_call(object_name, action, payload):
