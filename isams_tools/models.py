@@ -138,6 +138,9 @@ class Set():
         self.subject = subject
         self.sync_value = sync_value
 
+    def __str__(self):
+        return ("{0}, {1}, {2}, {3}, {4}".format(self.name, self.teacher, self.nc_year, self.sync_value, self.subject))
+
 
 class SetList():
     sync_value = None
