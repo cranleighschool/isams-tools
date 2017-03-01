@@ -12,7 +12,7 @@ class ISAMSEmail:
     """Creates an email object in order to send it, named so to prevent clashes, it doesn't do anything special"""
     email = None
 
-    def __init__(self, subject, message, to, email_from, cc, bcc):
+    def __init__(self, subject, message, to, email_from, cc=None, bcc=None):
         """Contructor for an ISAMSEmail object
 
         :param subject: email subject
@@ -24,8 +24,16 @@ class ISAMSEmail:
         self.email = MIMEText(message)
         self.email['To'] = to
         self.email['From'] = email_from
-        self.email['Cc'] = cc
-        self.bcc_list = EMAIL['bcc'] + bcc
+        if cc:
+            self.email['Cc'] = cc
+        else:
+            self.email['Cc'] = ''
+
+        if bcc:
+            self.bcc_list = EMAIL['bcc'] + bcc
+        else:
+            self.bcc_list = EMAIL['bcc']
+
         self.email['Subject'] = subject
 
         logger.info(
