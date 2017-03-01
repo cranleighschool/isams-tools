@@ -5,7 +5,10 @@ from settings import ISAMS_DATABASE, ISAMS_DATABASE_SERVER, ISAMS_DATABASE_USER,
     DATA_CHECK_IGNORE_SUBJECTS, DATA_CHECK_FAIL_EMAIL
 from isams_tools.utils.isams_email import ISAMSEmail
 
-duplicate_pupil_in_sets = {'query': """
+duplicate_pupil_in_sets = {
+'title': "Pupils in set twice",
+'notify': "khogg@cranleigh.ae",
+'query': """
 SELECT
 	A.*
 	,B.*
@@ -25,7 +28,10 @@ The following students have multiple entries for sets:
 
 """}
 
-teacher_timetable_mismatches = {'query': """
+teacher_timetable_mismatches = {
+'title': "Teachers not assigned to correct sets",
+'notify': "khogg@cranleigh.ae",
+'query': """
 	SELECT
 	Sets.txtSetCode
 	,Sets.txtTeacher
@@ -50,14 +56,20 @@ WHERE
 	)
 	AND Sub.txtSubjectName NOT IN %s
 
-""", 'params': DATA_CHECK_IGNORE_SUBJECTS, 'email': """
+""", 
+
+'params': DATA_CHECK_IGNORE_SUBJECTS,
+'email': """
 The following teachers are teaching a lesson but not added as a set teacher:
 
 {0}
 
 """}
 
-duplicate_reports = {'query': """
+duplicate_reports = {
+'title': "Duplicate report entries",
+'notify': "jcarney@cranleigh.ae",
+'query': """
 SELECT
 	*
 FROM (
@@ -87,6 +99,7 @@ FROM (
 			AND [intReportProgress]=1
 			AND AR.intReportCycleAcademicYear=2016
 			AND AR.txtGradingName='Attainment'
+            AND AR.intReportTypeID=1
 	) AS Grades
 WHERE
 	Grades.Report_Order > 1
@@ -97,7 +110,10 @@ The following students have multiple entries for reports:
 
 """}
 
-pupils_in_two_sets = {'query': """
+pupils_in_two_sets = {
+'title': "Pupil in two subject sets",
+'notify': "khogg@cranleigh.ae",
+'query': """
 SELECT
 	PMP.txtSchoolID AS [iSAMS ID]
 	,PMP.txtFullName AS [Pupil]
@@ -132,7 +148,23 @@ The following students are in two sets for the same subject:
 
 """, 'params': DATA_CHECK_IGNORE_SUBJECTS}
 
-checks = [duplicate_reports, duplicate_pupil_in_sets, teacher_timetable_mismatches, pupils_in_two_sets]
+pupils_with_no_usernames = {
+'title': "Missing username/email",
+'notify': "helpdesk@cranleigh.ae",
+'query': """
+SELECT txtForename, txtSurname FROM TblPupilManagementPupils 
+WHERE intSystemStatus = 1
+AND (txtEmailAddress = '' OR txtUserName = '')
+""",
+'email': """
+The following students have no username or email:
+
+{0}
+
+""",
+}
+
+checks = [duplicate_reports, duplicate_pupil_in_sets, teacher_timetable_mismatches, pupils_in_two_sets, pupils_with_no_usernames]
 
 logger = logging.getLogger('root')
 
@@ -160,11 +192,17 @@ def run():
                     # flatten the dict values, each query returns different keys so this is the best we can do
                     data += ', '.join("{!s}".format(val) for (key,val) in row.items()) + '\n'
 
-                email += check['email'].format(data)
+                email = check['email'].format(data)
 
-        if email:
-            ISAMSEmail("Data check failed", email, DATA_CHECK_FAIL_EMAIL, "isams@cranleigh.ae").send()
-        else:
-            logger.info("No errors found with the data")
+            if email:
+                to = DATA_CHECK_FAIL_EMAIL
+                if check['notify']:
+                    to = check['notify']
+                    
+                ISAMSEmail("[iSAMS Data] " + check['title'], email, to, "isams@cranleigh.ae").send()
+            else:
+                logger.info("No errors found with the data")
+            
+            email = ""
 
 
