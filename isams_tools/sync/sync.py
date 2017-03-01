@@ -61,9 +61,10 @@ def main():
 
         if 'setlist' in pair['mappings']:
             logger.info("Syncing setlists")
-            new_setlists(left_connection, right_connection)
+            # remove first - if we remove then add a student to the same set, the DB entry will fail
             removed_setlists(left_connection, right_connection)
-
+            new_setlists(left_connection, right_connection)
+            
 def get_connection(pair):
     connection = None
 
@@ -215,3 +216,5 @@ def removed_setlists(left, right):
         if not left.get_setlist_from_sync_value(setlist_sync_value):
             right.remove_setlist(setlist_sync_value)
             setlists_removed += 1
+    
+    logger.info("Removed {0} setlists".format(str(setlists_removed)))
