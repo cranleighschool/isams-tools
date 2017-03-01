@@ -9,9 +9,10 @@ from settings import SCF
 
 logger = logging.getLogger('root')
 
+API_URL = 'http://tower.cranleigh.ae/track/api/'
+
 class SCFConnector():
     STUDENT_TABLE = 'scf_student'
-
     host = None
     user = None
     password = None
@@ -318,10 +319,15 @@ class SCFConnector():
 
 
     def add_set(self, set):
-        payload = {'name': set.name, 'nc_year': set.nc_year, 'subject': set.subject, 'teacher': set.teacher.sync_value,
+        if hasattr(set, 'teacher') and hasattr(set.teacher, 'sync_value'):
+            teacher = set.teacher.sync_value
+        else:
+            teacher = None
+        
+        payload = {'name': set.name, 'nc_year': set.nc_year, 'subject': set.subject, 'teacher': teacher,
                    'sync_value': set.sync_value}
         api_call('set', 'create', payload)
-
+        
 
     def add_setlist(self, setlist):
         try:
@@ -344,9 +350,10 @@ class SCFConnector():
         # todo, log student and set details
         query = 'DELETE FROM "scf_setlist" WHERE sync_value = %s'
         self.cursor.execute(query, (sync_value,))
+        self.connection.commit()
 
 def api_call(object_name, action, payload):
-    r = requests.post("http://staff.cranleigh.ae/scf/api/" + action + "_" + object_name + "/1234", data=payload)
+    r = requests.post(API_URL + action + "_" + object_name + "/1234", data=payload)
 
     if r.status_code != 200:
         logger.critical('Error when adding {0}: '.format(object_name) + r.text)
